@@ -1,9 +1,9 @@
 package com.bandanize.backend.repositories;
 
-import com.bandanize.backend.models.UserModel;
+import com.bandanize.backend.models.TabModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserModel, Long> {
+public interface TabRepository extends JpaRepository<TabModel, Long> {
 }

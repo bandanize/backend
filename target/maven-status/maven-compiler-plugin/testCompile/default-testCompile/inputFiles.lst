@@ -1,2 +1,2 @@
-/home/rdvl/repositories/springboot-ng-test/backend/src/test/java/com/bandanize/backend/BackendApplicationTests.java
-/home/rdvl/repositories/springboot-ng-test/backend/src/test/java/com/bandanize/backend/controllers/UserControllerTest.java
+/home/rdvl/repositories/bandanize/bandanize-back/src/test/java/com/bandanize/backend/BackendApplicationTests.java
+/home/rdvl/repositories/bandanize/bandanize-back/src/test/java/com/bandanize/backend/controllers/UserControllerTest.java
