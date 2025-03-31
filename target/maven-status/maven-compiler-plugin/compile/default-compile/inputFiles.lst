@@ -1,0 +1,7 @@
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/BackendApplication.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/config/DataInitializer.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/controllers/UserController.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/exceptions/ErrorResponse.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/exceptions/ResourceNotFoundException.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/models/UserModel.java
+/home/rdvl/repositories/springboot-ng-test/backend/src/main/java/com/bandanize/backend/repositories/UserRepository.java
