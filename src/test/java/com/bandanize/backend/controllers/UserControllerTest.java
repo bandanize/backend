@@ -36,6 +36,14 @@ class UserControllerTest {
         user.setId(1L);
         user.setName("Test User");
         user.setEmail("test@example.com");
+        user.setUsername("testuser");
+        user.setFullName("Test User Full");
+        user.setCity("Test City");
+        user.setHashedPassword("hashedpassword");
+        user.setDisabled(false);
+        user.setPhoto("https://example.com/photo.png");
+        user.setRrss(Arrays.asList("https://twitter.com/testuser", "https://facebook.com/testuser"));
+        user.setBandIds(Arrays.asList("band1", "band2"));
     }
 
     @Test
@@ -45,7 +53,14 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Test User"))
-                .andExpect(jsonPath("$[0].email").value("test@example.com"));
+                .andExpect(jsonPath("$[0].email").value("test@example.com"))
+                .andExpect(jsonPath("$[0].username").value("testuser"))
+                .andExpect(jsonPath("$[0].fullName").value("Test User Full"))
+                .andExpect(jsonPath("$[0].city").value("Test City"))
+                .andExpect(jsonPath("$[0].disabled").value(false))
+                .andExpect(jsonPath("$[0].photo").value("https://example.com/photo.png"))
+                .andExpect(jsonPath("$[0].rrss[0]").value("https://twitter.com/testuser"))
+                .andExpect(jsonPath("$[0].bandIds[0]").value("band1"));
     }
 
     @Test
@@ -55,7 +70,14 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test User"))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.fullName").value("Test User Full"))
+                .andExpect(jsonPath("$.city").value("Test City"))
+                .andExpect(jsonPath("$.disabled").value(false))
+                .andExpect(jsonPath("$.photo").value("https://example.com/photo.png"))
+                .andExpect(jsonPath("$.rrss[0]").value("https://twitter.com/testuser"))
+                .andExpect(jsonPath("$.bandIds[0]").value("band1"));
     }
 
     @Test
@@ -64,10 +86,21 @@ class UserControllerTest {
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Test User\", \"email\": \"test@example.com\"}"))
+                        .content("{\"name\": \"Test User\", \"email\": \"test@example.com\", \"username\": \"testuser\", " +
+                                "\"fullName\": \"Test User Full\", \"city\": \"Test City\", \"hashedPassword\": \"hashedpassword\", " +
+                                "\"disabled\": false, \"photo\": \"https://example.com/photo.png\", " +
+                                "\"rrss\": [\"https://twitter.com/testuser\", \"https://facebook.com/testuser\"], " +
+                                "\"bandIds\": [\"band1\", \"band2\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test User"))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.fullName").value("Test User Full"))
+                .andExpect(jsonPath("$.city").value("Test City"))
+                .andExpect(jsonPath("$.disabled").value(false))
+                .andExpect(jsonPath("$.photo").value("https://example.com/photo.png"))
+                .andExpect(jsonPath("$.rrss[0]").value("https://twitter.com/testuser"))
+                .andExpect(jsonPath("$.bandIds[0]").value("band1"));
     }
 
     @Test
@@ -77,10 +110,20 @@ class UserControllerTest {
 
         mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Updated User\", \"email\": \"updated@example.com\"}"))
+                        .content("{\"name\": \"Updated User\", \"email\": \"updated@example.com\", \"username\": \"updateduser\", " +
+                                "\"fullName\": \"Updated User Full\", \"city\": \"Updated City\", \"hashedPassword\": \"updatedpassword\", " +
+                                "\"disabled\": true, \"photo\": \"https://example.com/updated-photo.png\", " +
+                                "\"rrss\": [\"https://twitter.com/updateduser\"], \"bandIds\": [\"updatedband\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated User"))
-                .andExpect(jsonPath("$.email").value("updated@example.com"));
+                .andExpect(jsonPath("$.email").value("updated@example.com"))
+                .andExpect(jsonPath("$.username").value("updateduser"))
+                .andExpect(jsonPath("$.fullName").value("Updated User Full"))
+                .andExpect(jsonPath("$.city").value("Updated City"))
+                .andExpect(jsonPath("$.disabled").value(true))
+                .andExpect(jsonPath("$.photo").value("https://example.com/updated-photo.png"))
+                .andExpect(jsonPath("$.rrss[0]").value("https://twitter.com/updateduser"))
+                .andExpect(jsonPath("$.bandIds[0]").value("updatedband"));
     }
 
     @Test
