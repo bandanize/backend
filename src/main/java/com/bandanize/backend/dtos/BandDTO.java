@@ -1,31 +1,16 @@
-package com.bandanize.backend.models;
+package com.bandanize.backend.dtos;
 
-import jakarta.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-public class BandModel {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class BandDTO {
     private Long id;
-
     private String name;
     private String photo;
     private String description;
     private String genre;
     private String city;
-
-    @ElementCollection
-    private List<String> rrss = new ArrayList<>();
-
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "band_user",
-        joinColumns = @JoinColumn(name = "band_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<UserModel> users = new ArrayList<>();
+    private List<String> rrss;
+    private List<Long> userIds;
 
     // Getters y setters
     public Long getId() {
@@ -84,11 +69,11 @@ public class BandModel {
         this.rrss = rrss;
     }
 
-    public List<UserModel> getUsers() {
-        return users;
+    public List<Long> getUserIds() {
+        return userIds;
     }
 
-    public void setUsers(List<UserModel> users) {
-        this.users = users;
+    public void setUserIds(List<Long> userIds) {
+        this.userIds = userIds;
     }
 }

@@ -3,6 +3,7 @@ package com.bandanize.backend.models;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +30,8 @@ public class UserModel implements UserDetails {
     @ElementCollection
     private List<String> rrss = new ArrayList<>();
 
-    @ElementCollection
-    private List<String> bandIds = new ArrayList<>();
+    @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BandModel> bands = new ArrayList<>();
 
     // Getters y setters
     public Long getId() {
@@ -41,12 +42,12 @@ public class UserModel implements UserDetails {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -57,8 +58,12 @@ public class UserModel implements UserDetails {
         this.email = email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getFullName() {
@@ -109,12 +114,12 @@ public class UserModel implements UserDetails {
         this.rrss = rrss;
     }
 
-    public List<String> getBandIds() {
-        return bandIds;
+    public List<BandModel> getBands() {
+        return bands;
     }
 
-    public void setBandIds(List<String> bandIds) {
-        this.bandIds = bandIds;
+    public void setBands(List<BandModel> bands) {
+        this.bands = bands;
     }
 
     @Override
@@ -125,11 +130,6 @@ public class UserModel implements UserDetails {
     @Override
     public String getPassword() {
         return hashedPassword;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 
     @Override
