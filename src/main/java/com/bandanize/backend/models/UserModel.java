@@ -1,18 +1,25 @@
 package com.bandanize.backend.models;
 
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
-public class UserModel {
+public class UserModel implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String email;
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String name;
     private String fullName;
     private String city = "";
     private String hashedPassword = "";
@@ -48,10 +55,6 @@ public class UserModel {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public void setUsername(String username) {
@@ -112,5 +115,40 @@ public class UserModel {
 
     public void setBandIds(List<String> bandIds) {
         this.bandIds = bandIds;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public String getPassword() {
+        return hashedPassword;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return !disabled;
     }
 }
