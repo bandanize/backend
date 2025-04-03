@@ -3,7 +3,12 @@ package com.bandanize.backend.controllers;
 import com.bandanize.backend.exceptions.ErrorResponse;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.BandModel;
+import com.bandanize.backend.models.UserModel;
+import com.bandanize.backend.models.SongModel;
 import com.bandanize.backend.repositories.BandRepository;
+import com.bandanize.backend.repositories.UserRepository;
+import com.bandanize.backend.repositories.SongRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +22,38 @@ public class BandController {
 
     @Autowired
     private BandRepository bandRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private SongRepository songRepository;
+
+    // Add a user to a band and vice versa
+    @PutMapping("/{bandId}/add-user/{userId}")
+    public ResponseEntity<String> addUserToBand(@PathVariable Long bandId, @PathVariable Long userId) {
+        // Find the band by ID
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        // Find the user by ID
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Find the user in the band
+        if (!band.getUserIds().contains(userId.toString())) {
+            band.getUserIds().add(userId.toString());
+            bandRepository.save(band);
+        }
+
+        // Find the band in the user
+        if (!user.getBandIds().contains(bandId.toString())) {
+            user.getBandIds().add(bandId.toString());
+            userRepository.save(user);
+        }
+
+        return ResponseEntity.ok("User added to band and band added to user successfully.");
+    }
 
     // Get all bands
     @GetMapping
