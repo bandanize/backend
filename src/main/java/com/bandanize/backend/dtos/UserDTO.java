@@ -7,7 +7,6 @@ public class UserDTO {
     private String username;
     private String email;
     private String name;
-    private String fullName;
     private String city;
     private String photo;
     private List<Long> bandIds;
@@ -43,14 +42,6 @@ public class UserDTO {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public String getCity() {

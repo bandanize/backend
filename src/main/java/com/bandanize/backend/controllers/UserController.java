@@ -67,7 +67,6 @@ public class UserController {
         if (userDetails.getName() != null) user.setName(userDetails.getName());
         if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
         if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
-        if (userDetails.getFullName() != null) user.setFullName(userDetails.getFullName());
         if (userDetails.getCity() != null) user.setCity(userDetails.getCity());
         if (userDetails.getHashedPassword() != null) user.setHashedPassword(userDetails.getHashedPassword());
         if (userDetails.getPhoto() != null) user.setPhoto(userDetails.getPhoto());
@@ -103,7 +102,6 @@ public class UserController {
         userDTO.setUsername(user.getUsername());
         userDTO.setEmail(user.getEmail());
         userDTO.setName(user.getName());
-        userDTO.setFullName(user.getFullName());
         userDTO.setCity(user.getCity());
         userDTO.setPhoto(user.getPhoto());
         userDTO.setBandIds(user.getBands().stream().map(BandModel::getId).collect(Collectors.toList()));

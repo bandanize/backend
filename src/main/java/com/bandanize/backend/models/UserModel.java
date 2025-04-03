@@ -21,7 +21,6 @@ public class UserModel implements UserDetails {
     private String email;
 
     private String name;
-    private String fullName;
     private String city = "";
     private String hashedPassword = "";
     private boolean disabled = true;
@@ -64,14 +63,6 @@ public class UserModel implements UserDetails {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public String getCity() {
