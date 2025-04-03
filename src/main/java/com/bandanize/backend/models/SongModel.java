@@ -24,7 +24,11 @@ public class SongModel {
     @ElementCollection
     private List<String> tabIds = new ArrayList<>();
 
-    // Getters and Setters
+    // Nuevo campo para asociar la canción a una banda
+    @Column(name = "band_id", nullable = false)
+    private Long bandId;
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -87,5 +91,13 @@ public class SongModel {
 
     public void setTabIds(List<String> tabIds) {
         this.tabIds = tabIds;
+    }
+
+    public Long getBandId() {
+        return bandId;
+    }
+
+    public void setBandId(Long bandId) {
+        this.bandId = bandId;
     }
 }
