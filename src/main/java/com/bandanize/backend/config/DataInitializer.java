@@ -5,27 +5,23 @@ import com.bandanize.backend.repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Arrays;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
-    public CommandLineRunner initDatabase(UserRepository userRepository) {
+    public CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Create admin user
             if (userRepository.count() == 0) {
                 UserModel user = new UserModel();
-                user.setName("");
+                user.setName("Raul Del Valle");
                 user.setUsername("admin");
-                user.setFullName("Administrator");
                 user.setEmail("admin@bandanize.com");
-                user.setCity("Headquarters");
-                user.setHashedPassword("securepassword");
+                user.setCity("Tarifa");
+                user.setHashedPassword(passwordEncoder.encode("admin"));
                 user.setDisabled(false);
-                user.setPhoto("https://example.com/admin-photo.png");
-                user.setRrss(Arrays.asList("https://twitter.com/admin", "https://facebook.com/admin"));
                 userRepository.save(user);
                 System.out.println("Usuario inicial creado: " + user.getUsername());
             }
