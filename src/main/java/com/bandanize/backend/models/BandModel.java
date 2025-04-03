@@ -16,10 +16,6 @@ public class BandModel {
     private String genre = "";
     private String city = "";
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "band_id")
-    private List<CommentModel> comments = new ArrayList<>();
-
     @ElementCollection
     private List<String> rrss = new ArrayList<>();
 
@@ -76,14 +72,6 @@ public class BandModel {
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public List<CommentModel> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<CommentModel> comments) {
-        this.comments = comments;
     }
 
     public List<String> getRrss() {

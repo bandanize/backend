@@ -31,7 +31,7 @@ public class UserController {
     public UserModel createUser(@RequestBody UserModel user) {
         return userRepository.save(user);
     }
-
+    // Get my user details
     @GetMapping("/me")
     public ResponseEntity<UserModel> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();

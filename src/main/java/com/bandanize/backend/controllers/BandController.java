@@ -79,17 +79,33 @@ public class BandController {
     public BandModel updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
-
-        band.setName(bandDetails.getName());
-        band.setPhoto(bandDetails.getPhoto());
-        band.setDescription(bandDetails.getDescription());
-        band.setGenre(bandDetails.getGenre());
-        band.setCity(bandDetails.getCity());
-        band.setComments(bandDetails.getComments());
-        band.setRrss(bandDetails.getRrss());
-        band.setSongIds(bandDetails.getSongIds());
-        band.setUserIds(bandDetails.getUserIds());
-
+    
+        // Actualiza solo los campos que se pasen en el body
+        if (bandDetails.getName() != null) {
+            band.setName(bandDetails.getName());
+        }
+        if (bandDetails.getPhoto() != null) {
+            band.setPhoto(bandDetails.getPhoto());
+        }
+        if (bandDetails.getDescription() != null) {
+            band.setDescription(bandDetails.getDescription());
+        }
+        if (bandDetails.getGenre() != null) {
+            band.setGenre(bandDetails.getGenre());
+        }
+        if (bandDetails.getCity() != null) {
+            band.setCity(bandDetails.getCity());
+        }
+        if (bandDetails.getRrss() != null && !bandDetails.getRrss().isEmpty()) {
+            band.setRrss(bandDetails.getRrss());
+        }
+        if (bandDetails.getSongIds() != null && !bandDetails.getSongIds().isEmpty()) {
+            band.setSongIds(bandDetails.getSongIds());
+        }
+        if (bandDetails.getUserIds() != null && !bandDetails.getUserIds().isEmpty()) {
+            band.setUserIds(bandDetails.getUserIds());
+        }
+    
         return bandRepository.save(band);
     }
 
