@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +39,18 @@ public class BandController {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
         return ResponseEntity.ok(convertToDTO(band));
+    }
+
+    @GetMapping("/my-bands")
+    public ResponseEntity<List<BandDTO>> getMyBands(@AuthenticationPrincipal UserDetails userDetails) {
+        UserModel user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + userDetails.getUsername()));
+    
+        List<BandDTO> bands = user.getBands().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    
+        return ResponseEntity.ok(bands);
     }
 
     // Create a new band
