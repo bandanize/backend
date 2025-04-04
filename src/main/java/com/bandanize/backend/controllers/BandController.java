@@ -53,6 +53,23 @@ public class BandController {
         return ResponseEntity.ok(bands);
     }
 
+    // Update a band
+    @PutMapping("/{id}")
+    public ResponseEntity<BandDTO> updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails) {
+        BandModel band = bandRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
+
+        if (bandDetails.getName() != null) band.setName(bandDetails.getName());
+        if (bandDetails.getPhoto() != null) band.setPhoto(bandDetails.getPhoto());
+        if (bandDetails.getDescription() != null) band.setDescription(bandDetails.getDescription());
+        if (bandDetails.getGenre() != null) band.setGenre(bandDetails.getGenre());
+        if (bandDetails.getCity() != null) band.setCity(bandDetails.getCity());
+        if (bandDetails.getRrss() != null && !bandDetails.getRrss().isEmpty()) band.setRrss(bandDetails.getRrss());
+
+        BandModel updatedBand = bandRepository.save(band);
+        return ResponseEntity.ok(convertToDTO(updatedBand));
+    }
+
     // Create a new band
     @PostMapping
     public BandDTO createBand(@RequestBody BandModel band) {

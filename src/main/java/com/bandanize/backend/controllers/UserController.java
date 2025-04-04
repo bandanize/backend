@@ -68,10 +68,8 @@ public class UserController {
         if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
         if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
         if (userDetails.getCity() != null) user.setCity(userDetails.getCity());
-        if (userDetails.getHashedPassword() != null) user.setHashedPassword(userDetails.getHashedPassword());
         if (userDetails.getPhoto() != null) user.setPhoto(userDetails.getPhoto());
         if (userDetails.getRrss() != null && !userDetails.getRrss().isEmpty()) user.setRrss(userDetails.getRrss());
-        user.setDisabled(userDetails.isDisabled());
 
         UserModel updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
@@ -103,6 +101,7 @@ public class UserController {
         userDTO.setEmail(user.getEmail());
         userDTO.setName(user.getName());
         userDTO.setCity(user.getCity());
+        userDTO.setRrss(user.getRrss());
         userDTO.setPhoto(user.getPhoto());
         userDTO.setBandIds(user.getBands().stream().map(BandModel::getId).collect(Collectors.toList()));
         return userDTO;
