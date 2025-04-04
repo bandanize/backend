@@ -6,7 +6,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 public class UserModel implements UserDetails {
@@ -27,7 +29,10 @@ public class UserModel implements UserDetails {
     private String photo = "";
 
     @ElementCollection
-    private List<String> rrss = new ArrayList<>();
+    @CollectionTable(name = "user_rrss", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "platform")
+    @Column(name = "url")
+    private Map<String, String> rrss = new HashMap<>();
 
     @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BandModel> bands = new ArrayList<>();
@@ -97,11 +102,11 @@ public class UserModel implements UserDetails {
         this.photo = photo;
     }
 
-    public List<String> getRrss() {
+    public Map<String, String> getRrss() {
         return rrss;
     }
 
-    public void setRrss(List<String> rrss) {
+    public void setRrss(Map<String, String> rrss) {
         this.rrss = rrss;
     }
 

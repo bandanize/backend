@@ -1,6 +1,7 @@
 package com.bandanize.backend.dtos;
 
 import java.util.List;
+import java.util.Map;
 
 public class BandDTO {
     private Long id;
@@ -9,7 +10,7 @@ public class BandDTO {
     private String description;
     private String genre;
     private String city;
-    private List<String> rrss;
+    private Map<String, String> rrss;
     private List<Long> userIds;
 
     // Getters y setters
@@ -61,11 +62,11 @@ public class BandDTO {
         this.city = city;
     }
 
-    public List<String> getRrss() {
+    public Map<String, String> getRrss() {
         return rrss;
     }
 
-    public void setRrss(List<String> rrss) {
+    public void setRrss(Map<String, String> rrss) {
         this.rrss = rrss;
     }
 

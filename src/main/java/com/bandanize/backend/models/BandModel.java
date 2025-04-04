@@ -2,7 +2,9 @@ package com.bandanize.backend.models;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 public class BandModel {
@@ -17,7 +19,10 @@ public class BandModel {
     private String city;
 
     @ElementCollection
-    private List<String> rrss = new ArrayList<>();
+    @CollectionTable(name = "band_rrss", joinColumns = @JoinColumn(name = "band_id"))
+    @MapKeyColumn(name = "platform")
+    @Column(name = "url")
+    private Map<String, String> rrss = new HashMap<>();
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
@@ -76,11 +81,11 @@ public class BandModel {
         this.city = city;
     }
 
-    public List<String> getRrss() {
+    public Map<String, String> getRrss() {
         return rrss;
     }
 
-    public void setRrss(List<String> rrss) {
+    public void setRrss(Map<String, String> rrss) {
         this.rrss = rrss;
     }
 
