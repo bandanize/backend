@@ -3,9 +3,12 @@ package com.bandanize.backend.models;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 public class UserModel implements UserDetails {
@@ -20,17 +23,19 @@ public class UserModel implements UserDetails {
     private String email;
 
     private String name;
-    private String fullName;
     private String city = "";
     private String hashedPassword = "";
     private boolean disabled = true;
     private String photo = "";
 
     @ElementCollection
-    private List<String> rrss = new ArrayList<>();
+    @CollectionTable(name = "user_rrss", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "platform")
+    @Column(name = "url")
+    private Map<String, String> rrss = new HashMap<>();
 
-    @ElementCollection
-    private List<String> bandIds = new ArrayList<>();
+    @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BandModel> bands = new ArrayList<>();
 
     // Getters y setters
     public Long getId() {
@@ -41,12 +46,12 @@ public class UserModel implements UserDetails {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -57,16 +62,12 @@ public class UserModel implements UserDetails {
         this.email = email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getName() {
+        return name;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getCity() {
@@ -101,20 +102,20 @@ public class UserModel implements UserDetails {
         this.photo = photo;
     }
 
-    public List<String> getRrss() {
+    public Map<String, String> getRrss() {
         return rrss;
     }
 
-    public void setRrss(List<String> rrss) {
+    public void setRrss(Map<String, String> rrss) {
         this.rrss = rrss;
     }
 
-    public List<String> getBandIds() {
-        return bandIds;
+    public List<BandModel> getBands() {
+        return bands;
     }
 
-    public void setBandIds(List<String> bandIds) {
-        this.bandIds = bandIds;
+    public void setBands(List<BandModel> bands) {
+        this.bands = bands;
     }
 
     @Override
@@ -125,11 +126,6 @@ public class UserModel implements UserDetails {
     @Override
     public String getPassword() {
         return hashedPassword;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 
     @Override
