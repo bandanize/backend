@@ -3,111 +3,107 @@ package com.bandanize.backend.controllers;
 import com.bandanize.backend.dtos.UserDTO;
 import com.bandanize.backend.exceptions.ErrorResponse;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
-import com.bandanize.backend.models.BandModel;
 import com.bandanize.backend.models.UserModel;
-import com.bandanize.backend.repositories.UserRepository;
-import com.bandanize.backend.repositories.BandRepository;
+import com.bandanize.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * REST Controller for managing Users.
+ * Exposes endpoints to CRUD users.
+ */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
-    private BandRepository bandRepository;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
-    // Get all users
+    /**
+     * Retrieves all users.
+     *
+     * @return List of UserDTOs.
+     */
     @GetMapping
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return userService.getAllUsers();
     }
 
-    // Create a new user
+    /**
+     * Creates a new user.
+     *
+     * @param user The user details.
+     * @return The created UserDTO.
+     */
     @PostMapping
     public UserDTO createUser(@RequestBody UserModel user) {
-        UserModel savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
+        return userService.createUser(user);
     }
 
-    // Get my user details
+    /**
+     * Retrieves the details of the currently authenticated user.
+     *
+     * @param userDetails The authenticated user details.
+     * @return The UserDTO of the current user.
+     */
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        UserModel user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-        return ResponseEntity.ok(convertToDTO(user));
+        UserDTO userDTO = userService.getUserByUsername(userDetails.getUsername());
+        return ResponseEntity.ok(userDTO);
     }
 
-    // Get a user by ID
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param id The ID of the user.
+     * @return ResponseEntity containing the UserDTO.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return ResponseEntity.ok(convertToDTO(user));
+        UserDTO userDTO = userService.getUserById(id);
+        return ResponseEntity.ok(userDTO);
     }
 
-    // Update a user
+    /**
+     * Updates an existing user.
+     *
+     * @param id          The ID of the user to update.
+     * @param userDetails The updated details.
+     * @return The updated UserDTO.
+     */
     @PutMapping("/{id}")
     public UserDTO updateUser(@PathVariable Long id, @RequestBody UserModel userDetails) {
-        UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-
-        // Update only the fields provided in the request body
-        if (userDetails.getName() != null) user.setName(userDetails.getName());
-        if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
-        if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
-        if (userDetails.getCity() != null) user.setCity(userDetails.getCity());
-        if (userDetails.getPhoto() != null) user.setPhoto(userDetails.getPhoto());
-        if (userDetails.getRrss() != null && !userDetails.getRrss().isEmpty()) user.setRrss(userDetails.getRrss());
-
-        UserModel updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
+        return userService.updateUser(id, userDetails);
     }
 
-    // Delete a user
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param id The ID of the user to delete.
+     * @return ResponseEntity with no content.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-
-        // Remove the user from all associated bands
-        for (BandModel band : user.getBands()) {
-            band.getUsers().remove(user);
-            bandRepository.save(band);
-        }
-
-        // Delete the user
-        userRepository.delete(user);
-
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Convert UserModel to UserDTO
-    private UserDTO convertToDTO(UserModel user) {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setId(user.getId());
-        userDTO.setUsername(user.getUsername());
-        userDTO.setEmail(user.getEmail());
-        userDTO.setName(user.getName());
-        userDTO.setCity(user.getCity());
-        userDTO.setRrss(user.getRrss());
-        userDTO.setPhoto(user.getPhoto());
-        userDTO.setBandIds(user.getBands().stream().map(BandModel::getId).collect(Collectors.toList()));
-        return userDTO;
-    }
-
-    // Exception handler for ResourceNotFoundException
+    /**
+     * Handles ResourceNotFoundException.
+     *
+     * @param ex The exception.
+     * @return ResponseEntity with error details.
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), "Resource not found");
