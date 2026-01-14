@@ -159,6 +159,8 @@ public class BandService {
                         user.getName(),
                         user.getEmail()))
                 .collect(Collectors.toList()));
+        bandDTO.setSongLists(band.getSongLists());
+        bandDTO.setChatMessages(band.getChatMessages());
         return bandDTO;
     }
 }

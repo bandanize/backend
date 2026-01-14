@@ -33,6 +33,14 @@ public class BandModel {
     @JoinTable(name = "band_user", joinColumns = @JoinColumn(name = "band_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private List<UserModel> users = new ArrayList<>();
 
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
+    private List<SongListModel> songLists = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<ChatMessageModel> chatMessages = new ArrayList<>();
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -96,5 +104,21 @@ public class BandModel {
 
     public void setUsers(List<UserModel> users) {
         this.users = users;
+    }
+
+    public List<SongListModel> getSongLists() {
+        return songLists;
+    }
+
+    public void setSongLists(List<SongListModel> songLists) {
+        this.songLists = songLists;
+    }
+
+    public List<ChatMessageModel> getChatMessages() {
+        return chatMessages;
+    }
+
+    public void setChatMessages(List<ChatMessageModel> chatMessages) {
+        this.chatMessages = chatMessages;
     }
 }

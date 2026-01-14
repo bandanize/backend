@@ -1,5 +1,7 @@
 package com.bandanize.backend.dtos;
 
+import com.bandanize.backend.models.ChatMessageModel;
+import com.bandanize.backend.models.SongListModel;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +14,8 @@ public class BandDTO {
     private String city;
     private Map<String, String> rrss;
     private List<UserSummaryDTO> members;
+    private List<SongListModel> songLists;
+    private List<ChatMessageModel> chatMessages;
 
     // Getters y setters
     public Long getId() {
@@ -76,5 +80,21 @@ public class BandDTO {
 
     public void setMembers(List<UserSummaryDTO> members) {
         this.members = members;
+    }
+
+    public List<SongListModel> getSongLists() {
+        return songLists;
+    }
+
+    public void setSongLists(List<SongListModel> songLists) {
+        this.songLists = songLists;
+    }
+
+    public List<ChatMessageModel> getChatMessages() {
+        return chatMessages;
+    }
+
+    public void setChatMessages(List<ChatMessageModel> chatMessages) {
+        this.chatMessages = chatMessages;
     }
 }
