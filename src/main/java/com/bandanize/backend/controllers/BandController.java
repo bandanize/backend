@@ -4,115 +4,126 @@ import com.bandanize.backend.dtos.BandDTO;
 import com.bandanize.backend.exceptions.ErrorResponse;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.BandModel;
-import com.bandanize.backend.models.UserModel;
-import com.bandanize.backend.repositories.BandRepository;
-import com.bandanize.backend.repositories.UserRepository;
+import com.bandanize.backend.services.BandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
+/**
+ * REST Controller for managing Bands.
+ * Exposes endpoints for creating, retrieving, and updating bands.
+ */
 @RestController
 @RequestMapping("/api/bands")
 public class BandController {
 
-    @Autowired
-    private BandRepository bandRepository;
+    private final BandService bandService;
 
     @Autowired
-    private UserRepository userRepository;
+    public BandController(BandService bandService) {
+        this.bandService = bandService;
+    }
 
-    // Get all bands
+    /**
+     * Retrieves all bands.
+     *
+     * @return List of BandDTOs.
+     */
     @GetMapping
     public List<BandDTO> getAllBands() {
-        return bandRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return bandService.getAllBands();
     }
 
-    // Get a band by ID
+    /**
+     * Retrieves a band by its ID.
+     *
+     * @param id The ID of the band.
+     * @return ResponseEntity with the BandDTO.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<BandDTO> getBandById(@PathVariable Long id) {
-        BandModel band = bandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
-        return ResponseEntity.ok(convertToDTO(band));
+        BandDTO bandDTO = bandService.getBandById(id);
+        return ResponseEntity.ok(bandDTO);
     }
 
+    /**
+     * Retrieves the bands associated with the authenticated user.
+     *
+     * @param userDetails The authenticated user details.
+     * @return ResponseEntity with the list of BandDTOs.
+     */
     @GetMapping("/my-bands")
     public ResponseEntity<List<BandDTO>> getMyBands(@AuthenticationPrincipal UserDetails userDetails) {
-        UserModel user = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + userDetails.getUsername()));
-    
-        List<BandDTO> bands = user.getBands().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    
+        List<BandDTO> bands = bandService.getBandsByUsername(userDetails.getUsername());
         return ResponseEntity.ok(bands);
     }
 
-    // Update a band
+    /**
+     * Updates an existing band.
+     *
+     * @param id          The ID of the band to update.
+     * @param bandDetails The updated details.
+     * @return ResponseEntity with the updated BandDTO.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<BandDTO> updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails) {
-        BandModel band = bandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
-
-        if (bandDetails.getName() != null) band.setName(bandDetails.getName());
-        if (bandDetails.getPhoto() != null) band.setPhoto(bandDetails.getPhoto());
-        if (bandDetails.getDescription() != null) band.setDescription(bandDetails.getDescription());
-        if (bandDetails.getGenre() != null) band.setGenre(bandDetails.getGenre());
-        if (bandDetails.getCity() != null) band.setCity(bandDetails.getCity());
-        if (bandDetails.getRrss() != null && !bandDetails.getRrss().isEmpty()) band.setRrss(bandDetails.getRrss());
-
-        BandModel updatedBand = bandRepository.save(band);
-        return ResponseEntity.ok(convertToDTO(updatedBand));
+        BandDTO updatedBand = bandService.updateBand(id, bandDetails);
+        return ResponseEntity.ok(updatedBand);
     }
 
-    // Create a new band
+    /**
+     * Creates a new band.
+     *
+     * @param band The band to create.
+     * @return The created BandDTO.
+     */
     @PostMapping
     public BandDTO createBand(@RequestBody BandModel band) {
-        BandModel savedBand = bandRepository.save(band);
-        return convertToDTO(savedBand);
+        return bandService.createBand(band);
     }
 
+    /**
+     * Creates a new band associated with a specific user.
+     *
+     * @param userId      The ID of the user.
+     * @param bandDetails The band details.
+     * @return ResponseEntity with the created BandDTO.
+     */
     @PostMapping("/create/{userId}")
     public ResponseEntity<BandDTO> createBandWithUser(@PathVariable Long userId, @RequestBody BandModel bandDetails) {
-        UserModel user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
-        BandModel band = new BandModel();
-        band.setName(bandDetails.getName());
-        band.setPhoto(bandDetails.getPhoto());
-        band.setDescription(bandDetails.getDescription());
-        band.setGenre(bandDetails.getGenre());
-        band.setCity(bandDetails.getCity());
-        band.setRrss(bandDetails.getRrss());
-        band.getUsers().add(user);
-
-        BandModel savedBand = bandRepository.save(band);
-        user.getBands().add(savedBand);
-        userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDTO(savedBand));
+        BandDTO createdBand = bandService.createBandWithUser(userId, bandDetails);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdBand);
     }
 
-    // Convert BandModel to BandDTO
-    private BandDTO convertToDTO(BandModel band) {
-        BandDTO bandDTO = new BandDTO();
-        bandDTO.setId(band.getId());
-        bandDTO.setName(band.getName());
-        bandDTO.setPhoto(band.getPhoto());
-        bandDTO.setDescription(band.getDescription());
-        bandDTO.setGenre(band.getGenre());
-        bandDTO.setCity(band.getCity());
-        bandDTO.setRrss(band.getRrss());
-        bandDTO.setUserIds(band.getUsers().stream().map(UserModel::getId).collect(Collectors.toList()));
-        return bandDTO;
+    /**
+     * Adds a member to the band.
+     *
+     * @param bandId The ID of the band.
+     * @param body   Map containing the email of the user to add.
+     * @return ResponseEntity with the updated BandDTO.
+     */
+    @PostMapping("/{bandId}/members")
+    public ResponseEntity<BandDTO> addMember(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        BandDTO updatedBand = bandService.addMember(bandId, email);
+        return ResponseEntity.ok(updatedBand);
     }
 
-    // Exception handler for ResourceNotFoundException
+    /**
+     * Exception handler for ResourceNotFoundException.
+     *
+     * @param ex The exception.
+     * @return ResponseEntity with error details.
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), "Resource not found");
