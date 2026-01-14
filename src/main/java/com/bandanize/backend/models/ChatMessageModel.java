@@ -17,6 +17,7 @@ public class ChatMessageModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "band_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private BandModel band;
 
     @Column(columnDefinition = "TEXT")
