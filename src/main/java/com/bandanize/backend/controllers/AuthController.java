@@ -75,6 +75,7 @@ public class AuthController {
         }
 
         user.setHashedPassword(passwordEncoder.encode(user.getHashedPassword()));
+        user.setDisabled(false); // Enable the user by default
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
