@@ -21,11 +21,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BandRepository bandRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, BandRepository bandRepository) {
+    public UserService(UserRepository userRepository, BandRepository bandRepository,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.bandRepository = bandRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -144,6 +147,37 @@ public class UserService {
         return users.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Changes the password of a user.
+     *
+     * @param userId          The ID of the user.
+     * @param currentPassword The current password for validation.
+     * @param newPassword     The new password to set.
+     * @throws ResourceNotFoundException                                           if
+     *                                                                             the
+     *                                                                             user
+     *                                                                             is
+     *                                                                             not
+     *                                                                             found.
+     * @throws org.springframework.security.authentication.BadCredentialsException if
+     *                                                                             the
+     *                                                                             current
+     *                                                                             password
+     *                                                                             is
+     *                                                                             incorrect.
+     */
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        if (!passwordEncoder.matches(currentPassword, user.getHashedPassword())) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Invalid current password");
+        }
+
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     /**

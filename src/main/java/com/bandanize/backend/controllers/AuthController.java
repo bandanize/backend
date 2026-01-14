@@ -1,9 +1,11 @@
 package com.bandanize.backend.controllers;
 
+import com.bandanize.backend.dtos.ChangePasswordDTO;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.repositories.UserRepository;
 import com.bandanize.backend.services.JwtService;
+import com.bandanize.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,14 +26,16 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-            PasswordEncoder passwordEncoder, UserRepository userRepository) {
+            PasswordEncoder passwordEncoder, UserRepository userRepository, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     /**
@@ -78,6 +82,31 @@ public class AuthController {
         user.setDisabled(false); // Enable the user by default
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+    }
+
+    /**
+     * Changes the password of the authenticated user.
+     *
+     * @param request        The change password request.
+     * @param authentication The authentication object.
+     * @return ResponseEntity with success or error message.
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO request,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+
+            // Better way: Get username from authentication -> Get User -> Get ID
+            String username = authentication.getName();
+            com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(username);
+
+            userService.changePassword(user.getId(), request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }
 
