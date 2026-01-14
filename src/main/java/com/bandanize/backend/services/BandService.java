@@ -166,6 +166,39 @@ public class BandService {
     }
 
     /**
+     * Adds a chat message to a band.
+     *
+     * @param bandId  The ID of the band.
+     * @param request The chat message request containing userId and message.
+     * @return The saved ChatMessageModel.
+     * @throws ResourceNotFoundException if band or user is not found.
+     */
+    public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
+            com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        UserModel user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+
+        com.bandanize.backend.models.ChatMessageModel message = new com.bandanize.backend.models.ChatMessageModel();
+        message.setBand(band);
+        message.setSender(user);
+        message.setMessage(request.getMessage());
+        message.setTimestamp(java.time.LocalDateTime.now());
+
+        band.getChatMessages().add(message);
+        bandRepository.save(band);
+
+        // Return the last added message (which is the one we just added)
+        // Since it's a list, getting the last element is safe-ish for now.
+        // A better approach would be to save message via ChatMessageRepository if we
+        // had one.
+        // But cascading save on Band works. The ID will be generated upon save.
+        return band.getChatMessages().get(band.getChatMessages().size() - 1);
+    }
+
+    /**
      * Helper method to convert BandModel to BandDTO.
      *
      * @param band The BandModel.

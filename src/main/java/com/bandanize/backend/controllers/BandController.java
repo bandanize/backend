@@ -119,6 +119,20 @@ public class BandController {
     }
 
     /**
+     * Adds a chat message to the band.
+     *
+     * @param bandId  The ID of the band.
+     * @param request The chat message request.
+     * @return ResponseEntity with the saved ChatMessageModel.
+     */
+    @PostMapping("/{bandId}/chat")
+    public ResponseEntity<com.bandanize.backend.models.ChatMessageModel> addChatMessage(@PathVariable Long bandId,
+            @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
+        com.bandanize.backend.models.ChatMessageModel savedMessage = bandService.addChatMessage(bandId, request);
+        return ResponseEntity.ok(savedMessage);
+    }
+
+    /**
      * Exception handler for ResourceNotFoundException.
      *
      * @param ex The exception.

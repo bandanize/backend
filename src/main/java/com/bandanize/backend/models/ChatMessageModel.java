@@ -23,6 +23,7 @@ public class ChatMessageModel {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 
     public Long getId() {
