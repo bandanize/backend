@@ -34,7 +34,9 @@ public class SongService {
     public SongListModel updateSongList(Long listId, SongListModel details) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
-        list.setName(details.getName());
+        if (details.getName() != null) {
+            list.setName(details.getName());
+        }
         return songListRepository.save(list);
     }
 
@@ -53,10 +55,14 @@ public class SongService {
     public SongModel updateSong(Long songId, SongModel details) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
-        song.setName(details.getName());
-        song.setBpm(details.getBpm());
-        song.setSongKey(details.getSongKey());
-        song.setOriginalBand(details.getOriginalBand());
+        if (details.getName() != null)
+            song.setName(details.getName());
+        if (details.getBpm() != 0)
+            song.setBpm(details.getBpm());
+        if (details.getSongKey() != null)
+            song.setSongKey(details.getSongKey());
+        if (details.getOriginalBand() != null)
+            song.setOriginalBand(details.getOriginalBand());
         if (details.getFiles() != null) {
             song.setFiles(details.getFiles());
         }
@@ -78,11 +84,16 @@ public class SongService {
     public TablatureModel updateTablature(Long tabId, TablatureModel details) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
-        tab.setName(details.getName());
-        tab.setInstrument(details.getInstrument());
-        tab.setInstrumentIcon(details.getInstrumentIcon());
-        tab.setTuning(details.getTuning());
-        tab.setContent(details.getContent());
+        if (details.getName() != null)
+            tab.setName(details.getName());
+        if (details.getInstrument() != null)
+            tab.setInstrument(details.getInstrument());
+        if (details.getInstrumentIcon() != null)
+            tab.setInstrumentIcon(details.getInstrumentIcon());
+        if (details.getTuning() != null)
+            tab.setTuning(details.getTuning());
+        if (details.getContent() != null)
+            tab.setContent(details.getContent());
         if (details.getFiles() != null) {
             tab.setFiles(details.getFiles());
         }
