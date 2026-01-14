@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST Controller for managing Bands.
@@ -98,6 +99,23 @@ public class BandController {
     public ResponseEntity<BandDTO> createBandWithUser(@PathVariable Long userId, @RequestBody BandModel bandDetails) {
         BandDTO createdBand = bandService.createBandWithUser(userId, bandDetails);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBand);
+    }
+
+    /**
+     * Adds a member to the band.
+     *
+     * @param bandId The ID of the band.
+     * @param body   Map containing the email of the user to add.
+     * @return ResponseEntity with the updated BandDTO.
+     */
+    @PostMapping("/{bandId}/members")
+    public ResponseEntity<BandDTO> addMember(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        BandDTO updatedBand = bandService.addMember(bandId, email);
+        return ResponseEntity.ok(updatedBand);
     }
 
     /**

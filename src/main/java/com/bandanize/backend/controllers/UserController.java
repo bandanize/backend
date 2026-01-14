@@ -34,9 +34,25 @@ public class UserController {
      *
      * @return List of UserDTOs.
      */
+    /**
+     * Retrieves all users.
+     *
+     * @return List of UserDTOs.
+     */
     @GetMapping
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    /**
+     * Searching users by email or username.
+     * 
+     * @param query The search string.
+     * @return List of matching UserDTOs.
+     */
+    @GetMapping("/search")
+    public List<UserDTO> searchUsers(@RequestParam String query) {
+        return userService.searchUsers(query);
     }
 
     /**

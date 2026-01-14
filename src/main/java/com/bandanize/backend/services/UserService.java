@@ -129,6 +129,24 @@ public class UserService {
     }
 
     /**
+     * Searches for users by email or username containing the query string.
+     *
+     * @param query The search query.
+     * @return List of matching UserDTOs.
+     */
+    public List<UserDTO> searchUsers(String query) {
+        // Search by email first, could extend to username too
+        List<UserModel> users = userRepository.findByEmailContaining(query);
+        if (users.isEmpty()) {
+            users = userRepository.findByUsernameContaining(query);
+        }
+
+        return users.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Converts a UserModel entity to a UserDTO.
      *
      * @param user The UserModel entity.

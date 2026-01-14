@@ -138,10 +138,38 @@ public class BandService {
     }
 
     /**
-     * Converts a BandModel entity to a BandDTO.
+     * Adds a user to a band by email.
      *
-     * @param band The BandModel entity.
-     * @return The corresponding BandDTO.
+     * @param bandId The ID of the band.
+     * @param email  The email of the user to add.
+     * @return The updated BandDTO.
+     * @throws ResourceNotFoundException if the band or user is not found.
+     */
+    public BandDTO addMember(Long bandId, String email) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        UserModel user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        // Check if user is already a member
+        if (band.getUsers().contains(user)) {
+            return convertToDTO(band);
+        }
+
+        band.getUsers().add(user);
+        BandModel savedBand = bandRepository.save(band);
+
+        // Also update user side if needed (depending on cascade/fetch settings, but
+        // safe to save band usually)
+        return convertToDTO(savedBand);
+    }
+
+    /**
+     * Helper method to convert BandModel to BandDTO.
+     *
+     * @param band The BandModel.
+     * @return The BandDTO.
      */
     private BandDTO convertToDTO(BandModel band) {
         BandDTO bandDTO = new BandDTO();
