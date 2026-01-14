@@ -12,6 +12,7 @@ public class BandDTO {
     private String description;
     private String genre;
     private String city;
+    private Long ownerId;
     private Map<String, String> rrss;
     private List<UserSummaryDTO> members;
     private List<SongListModel> songLists;
@@ -96,5 +97,13 @@ public class BandDTO {
 
     public void setChatMessages(List<ChatMessageModel> chatMessages) {
         this.chatMessages = chatMessages;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
 }

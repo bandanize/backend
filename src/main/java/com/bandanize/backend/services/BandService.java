@@ -21,56 +21,37 @@ public class BandService {
 
     private final BandRepository bandRepository;
     private final UserRepository userRepository;
+    private final com.bandanize.backend.repositories.BandInvitationRepository invitationRepository;
 
     @Autowired
-    public BandService(BandRepository bandRepository, UserRepository userRepository) {
+    public BandService(BandRepository bandRepository, UserRepository userRepository,
+            com.bandanize.backend.repositories.BandInvitationRepository invitationRepository) {
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
+        this.invitationRepository = invitationRepository;
     }
 
-    /**
-     * Retrieves all bands.
-     *
-     * @return List of BandDTOs.
-     */
+    // ... existing getAllBands ...
     public List<BandDTO> getAllBands() {
         return bandRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves a band by its ID.
-     *
-     * @param id The ID of the band.
-     * @return The found BandDTO.
-     * @throws ResourceNotFoundException if the band is not found.
-     */
+    // ... existing getBandById ...
     public BandDTO getBandById(Long id) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
         return convertToDTO(band);
     }
 
-    /**
-     * Creates a new band.
-     *
-     * @param band The band entity to save.
-     * @return The created BandDTO.
-     */
+    // ... existing createBand ...
     public BandDTO createBand(BandModel band) {
         BandModel savedBand = bandRepository.save(band);
         return convertToDTO(savedBand);
     }
 
-    /**
-     * Creates a new band and associates it with a user.
-     *
-     * @param userId      The ID of the user creating the band.
-     * @param bandDetails The details of the band to create.
-     * @return The created BandDTO.
-     * @throws ResourceNotFoundException if the user is not found.
-     */
+    // ... existing createBandWithUser ...
     public BandDTO createBandWithUser(Long userId, BandModel bandDetails) {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -82,6 +63,7 @@ public class BandService {
         band.setGenre(bandDetails.getGenre());
         band.setCity(bandDetails.getCity());
         band.setRrss(bandDetails.getRrss());
+        band.setOwner(user);
         band.getUsers().add(user);
 
         BandModel savedBand = bandRepository.save(band);
@@ -91,14 +73,7 @@ public class BandService {
         return convertToDTO(savedBand);
     }
 
-    /**
-     * Updates an existing band.
-     *
-     * @param id          The ID of the band to update.
-     * @param bandDetails The new band details.
-     * @return The updated BandDTO.
-     * @throws ResourceNotFoundException if the band is not found.
-     */
+    // ... existing updateBand ...
     public BandDTO updateBand(Long id, BandModel bandDetails) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
@@ -121,13 +96,7 @@ public class BandService {
         return convertToDTO(updatedBand);
     }
 
-    /**
-     * Retrieves all bands associated with a specific username.
-     *
-     * @param username The username of the user.
-     * @return List of BandDTOs associated with the user.
-     * @throws ResourceNotFoundException if the user is not found.
-     */
+    // ... existing getBandsByUsername ...
     public List<BandDTO> getBandsByUsername(String username) {
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
@@ -138,41 +107,106 @@ public class BandService {
     }
 
     /**
-     * Adds a user to a band by email.
+     * Sends an invitation to a user to join a band.
+     * Replaces immediate adding.
      *
      * @param bandId The ID of the band.
-     * @param email  The email of the user to add.
-     * @return The updated BandDTO.
-     * @throws ResourceNotFoundException if the band or user is not found.
+     * @param email  The email of the user to invite.
      */
-    public BandDTO addMember(Long bandId, String email) {
+    public void inviteMember(Long bandId, String email) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-        // Check if user is already a member
         if (band.getUsers().contains(user)) {
-            return convertToDTO(band);
+            throw new IllegalArgumentException("User is already a member");
         }
 
-        band.getUsers().add(user);
-        BandModel savedBand = bandRepository.save(band);
+        // Check if invitation exists
+        java.util.Optional<com.bandanize.backend.models.BandInvitationModel> existingInvitation = invitationRepository
+                .findByBandIdAndInvitedUserId(bandId, user.getId());
 
-        // Also update user side if needed (depending on cascade/fetch settings, but
-        // safe to save band usually)
-        return convertToDTO(savedBand);
+        if (existingInvitation.isPresent()) {
+            com.bandanize.backend.models.BandInvitationModel invitation = existingInvitation.get();
+            if (invitation.getStatus() == com.bandanize.backend.models.InvitationStatus.PENDING) {
+                // Already pending
+                return;
+            } else {
+                // Reactivate invitation
+                invitation.setStatus(com.bandanize.backend.models.InvitationStatus.PENDING);
+                invitationRepository.save(invitation);
+                return;
+            }
+        }
+
+        com.bandanize.backend.models.BandInvitationModel invitation = new com.bandanize.backend.models.BandInvitationModel();
+        invitation.setBand(band);
+        invitation.setInvitedUser(user);
+        invitation.setStatus(com.bandanize.backend.models.InvitationStatus.PENDING);
+
+        invitationRepository.save(invitation);
     }
 
-    /**
-     * Adds a chat message to a band.
-     *
-     * @param bandId  The ID of the band.
-     * @param request The chat message request containing userId and message.
-     * @return The saved ChatMessageModel.
-     * @throws ResourceNotFoundException if band or user is not found.
-     */
+    public List<com.bandanize.backend.dtos.BandInvitationDTO> getPendingInvitations(Long userId) {
+        return invitationRepository
+                .findByInvitedUserIdAndStatus(userId, com.bandanize.backend.models.InvitationStatus.PENDING).stream()
+                .map(inv -> {
+                    com.bandanize.backend.dtos.BandInvitationDTO dto = new com.bandanize.backend.dtos.BandInvitationDTO();
+                    dto.setId(inv.getId());
+                    dto.setBandName(inv.getBand().getName());
+                    dto.setBandId(inv.getBand().getId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public void acceptInvitation(Long invitationId) {
+        com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+
+        if (invitation.getStatus() != com.bandanize.backend.models.InvitationStatus.PENDING) {
+            throw new IllegalArgumentException("Invitation is not pending");
+        }
+
+        BandModel band = invitation.getBand();
+        UserModel user = invitation.getInvitedUser();
+
+        band.getUsers().add(user);
+        bandRepository.save(band); // Cascades to user if set up, ensuring consistent relationship
+
+        invitation.setStatus(com.bandanize.backend.models.InvitationStatus.ACCEPTED);
+        invitationRepository.save(invitation);
+    }
+
+    public void rejectInvitation(Long invitationId) {
+        com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+
+        invitation.setStatus(com.bandanize.backend.models.InvitationStatus.REJECTED);
+        invitationRepository.save(invitation);
+    }
+
+    public void leaveBand(Long bandId, Long userId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!band.getUsers().contains(user)) {
+            throw new ResourceNotFoundException("User is not in this band");
+        }
+
+        // Remove relationship
+        band.getUsers().remove(user);
+        user.getBands().remove(band); // Important for consistency
+
+        bandRepository.save(band);
+        userRepository.save(user);
+    }
+
+    // ... existing addChatMessage ...
     public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
             com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
         BandModel band = bandRepository.findById(bandId)
@@ -190,20 +224,10 @@ public class BandService {
         band.getChatMessages().add(message);
         bandRepository.save(band);
 
-        // Return the last added message (which is the one we just added)
-        // Since it's a list, getting the last element is safe-ish for now.
-        // A better approach would be to save message via ChatMessageRepository if we
-        // had one.
-        // But cascading save on Band works. The ID will be generated upon save.
         return band.getChatMessages().get(band.getChatMessages().size() - 1);
     }
 
-    /**
-     * Helper method to convert BandModel to BandDTO.
-     *
-     * @param band The BandModel.
-     * @return The BandDTO.
-     */
+    // ... existing convertToDTO ...
     private BandDTO convertToDTO(BandModel band) {
         BandDTO bandDTO = new BandDTO();
         bandDTO.setId(band.getId());
@@ -212,6 +236,14 @@ public class BandService {
         bandDTO.setDescription(band.getDescription());
         bandDTO.setGenre(band.getGenre());
         bandDTO.setCity(band.getCity());
+
+        // Map ownerId, fallback to first user if null (for legacy data)
+        if (band.getOwner() != null) {
+            bandDTO.setOwnerId(band.getOwner().getId());
+        } else if (!band.getUsers().isEmpty()) {
+            bandDTO.setOwnerId(band.getUsers().get(0).getId());
+        }
+
         bandDTO.setRrss(band.getRrss());
         bandDTO.setMembers(band.getUsers().stream()
                 .map(user -> new com.bandanize.backend.dtos.UserSummaryDTO(

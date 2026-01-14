@@ -102,20 +102,41 @@ public class BandController {
     }
 
     /**
-     * Adds a member to the band.
+     * Invites a user to the band.
      *
      * @param bandId The ID of the band.
-     * @param body   Map containing the email of the user to add.
-     * @return ResponseEntity with the updated BandDTO.
+     * @param body   Map containing the email of the user to invite.
+     * @return ResponseEntity with success message.
      */
-    @PostMapping("/{bandId}/members")
-    public ResponseEntity<BandDTO> addMember(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
+    @PostMapping("/{bandId}/invite")
+    public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
         String email = body.get("email");
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
-        BandDTO updatedBand = bandService.addMember(bandId, email);
-        return ResponseEntity.ok(updatedBand);
+        bandService.inviteMember(bandId, email);
+        return ResponseEntity.ok("Invitation sent successfully");
+    }
+
+    /**
+     * Allows a user to leave the band.
+     * 
+     * @param bandId      The ID of the band.
+     * @param userDetails The authenticated user.
+     * @return ResponseEntity with success message.
+     */
+    @PostMapping("/{bandId}/leave")
+    public ResponseEntity<String> leaveBand(@PathVariable Long bandId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // We need the user ID. We can get it from the service via username, or if
+        // UserDetails is our UserPrincipal
+        // For now, fetch ID via service
+        // Assuming we can get the ID somehow.
+        // Best practice: Service gets user by username.
+        com.bandanize.backend.dtos.UserDTO user = com.bandanize.backend.context.SpringContext
+                .getBean(com.bandanize.backend.services.UserService.class).getUserByUsername(userDetails.getUsername());
+        bandService.leaveBand(bandId, user.getId());
+        return ResponseEntity.ok("Left band successfully");
     }
 
     /**

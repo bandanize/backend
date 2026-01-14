@@ -29,6 +29,10 @@ public class BandModel {
     @Column(name = "url")
     private Map<String, String> rrss = new HashMap<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private UserModel owner;
+
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "band_user", joinColumns = @JoinColumn(name = "band_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private List<UserModel> users = new ArrayList<>();
@@ -120,5 +124,13 @@ public class BandModel {
 
     public void setChatMessages(List<ChatMessageModel> chatMessages) {
         this.chatMessages = chatMessages;
+    }
+
+    public UserModel getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserModel owner) {
+        this.owner = owner;
     }
 }
