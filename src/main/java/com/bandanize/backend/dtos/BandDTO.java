@@ -11,7 +11,7 @@ public class BandDTO {
     private String genre;
     private String city;
     private Map<String, String> rrss;
-    private List<Long> userIds;
+    private List<UserSummaryDTO> members;
 
     // Getters y setters
     public Long getId() {
@@ -70,11 +70,11 @@ public class BandDTO {
         this.rrss = rrss;
     }
 
-    public List<Long> getUserIds() {
-        return userIds;
+    public List<UserSummaryDTO> getMembers() {
+        return members;
     }
 
-    public void setUserIds(List<Long> userIds) {
-        this.userIds = userIds;
+    public void setMembers(List<UserSummaryDTO> members) {
+        this.members = members;
     }
 }

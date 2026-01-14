@@ -152,8 +152,12 @@ public class BandService {
         bandDTO.setGenre(band.getGenre());
         bandDTO.setCity(band.getCity());
         bandDTO.setRrss(band.getRrss());
-        bandDTO.setUserIds(band.getUsers().stream()
-                .map(UserModel::getId)
+        bandDTO.setMembers(band.getUsers().stream()
+                .map(user -> new com.bandanize.backend.dtos.UserSummaryDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getName(),
+                        user.getEmail()))
                 .collect(Collectors.toList()));
         return bandDTO;
     }

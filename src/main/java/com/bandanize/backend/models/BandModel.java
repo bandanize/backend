@@ -13,8 +13,13 @@ public class BandModel {
     private Long id;
 
     private String name;
+
+    @Column(columnDefinition = "TEXT")
     private String photo;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private String genre;
     private String city;
 
@@ -25,11 +30,7 @@ public class BandModel {
     private Map<String, String> rrss = new HashMap<>();
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "band_user",
-        joinColumns = @JoinColumn(name = "band_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @JoinTable(name = "band_user", joinColumns = @JoinColumn(name = "band_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private List<UserModel> users = new ArrayList<>();
 
     // Getters y setters

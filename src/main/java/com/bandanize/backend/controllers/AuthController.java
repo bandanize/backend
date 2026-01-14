@@ -1,5 +1,6 @@
 package com.bandanize.backend.controllers;
 
+import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.repositories.UserRepository;
 import com.bandanize.backend.services.JwtService;
@@ -44,8 +45,14 @@ public class AuthController {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+
+            final UserModel user = userRepository.findByUsername(authRequest.getUsername())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
             String token = jwtService.generateToken(authRequest.getUsername());
-            return ResponseEntity.ok(new AuthResponse(token));
+
+            return ResponseEntity
+                    .ok(new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getName()));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
@@ -103,12 +110,36 @@ class AuthRequest {
  */
 class AuthResponse {
     private String token;
+    private Long id;
+    private String username;
+    private String email;
+    private String name;
 
-    public AuthResponse(String token) {
+    public AuthResponse(String token, Long id, String username, String email, String name) {
         this.token = token;
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.name = name;
     }
 
     public String getToken() {
         return token;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getName() {
+        return name;
     }
 }

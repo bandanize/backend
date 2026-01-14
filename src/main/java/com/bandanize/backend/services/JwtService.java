@@ -12,7 +12,11 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-    private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // Use a fixed secret key for development to avoid invalidating tokens on
+    // restart
+    // Ideally this should be in application.properties
+    private static final String SECRET_STRING = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private final Key SECRET_KEY = Keys.hmacShaKeyFor(io.jsonwebtoken.io.Decoders.BASE64.decode(SECRET_STRING));
 
     public String generateToken(String username) {
         return Jwts.builder()
@@ -36,7 +40,7 @@ public class JwtService {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-    
+
     private boolean isTokenExpired(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
