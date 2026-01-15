@@ -51,9 +51,10 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
 
             final UserModel user = userRepository.findByUsername(authRequest.getUsername())
+                    .or(() -> userRepository.findByEmail(authRequest.getUsername()))
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            String token = jwtService.generateToken(authRequest.getUsername());
+            String token = jwtService.generateToken(user.getUsername());
 
             return ResponseEntity
                     .ok(new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getName()));
