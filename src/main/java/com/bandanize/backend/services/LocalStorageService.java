@@ -114,4 +114,64 @@ public class LocalStorageService implements FileStorageService {
             throw new RuntimeException("Could not delete file: " + filename, e);
         }
     }
+
+    @Override
+    public String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks,
+            String originalFilename, String folder) {
+        try {
+            Path tempDir = rootLocation.resolve("temp").resolve(uploadId);
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+
+            Path chunkPath = tempDir.resolve("chunk_" + chunkIndex);
+            Files.copy(file.getInputStream(), chunkPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Check if all chunks are uploaded
+            boolean allChunksPresent = true;
+            for (int i = 0; i < totalChunks; i++) {
+                if (!Files.exists(tempDir.resolve("chunk_" + i))) {
+                    allChunksPresent = false;
+                    break;
+                }
+            }
+
+            if (allChunksPresent) {
+                // Merge chunks
+                String uniqueFilename = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(originalFilename);
+                Path targetFolder = rootLocation.resolve(folder);
+                if (!Files.exists(targetFolder)) {
+                    Files.createDirectories(targetFolder);
+                }
+                Path targetFile = targetFolder.resolve(uniqueFilename);
+
+                try (var outputStream = Files.newOutputStream(targetFile)) {
+                    for (int i = 0; i < totalChunks; i++) {
+                        Path chunk = tempDir.resolve("chunk_" + i);
+                        Files.copy(chunk, outputStream);
+                        // Files.delete(chunk); // Optional: delete as we go, or separate cleanup
+                    }
+                }
+
+                // Cleanup temp dir
+                try (var stream = Files.walk(tempDir)) {
+                    stream.sorted((p1, p2) -> -p1.compareTo(p2)) // reverse order to delete files before dirs
+                            .forEach(path -> {
+                                try {
+                                    Files.delete(path);
+                                } catch (IOException e) {
+                                    // ignore
+                                }
+                            });
+                }
+
+                return uniqueFilename;
+            }
+
+            return "Chunk received"; // Not done yet
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store chunk", e);
+        }
+    }
 }

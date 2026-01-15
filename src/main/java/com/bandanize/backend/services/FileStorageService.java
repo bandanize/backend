@@ -10,4 +10,7 @@ public interface FileStorageService {
     Resource load(String filename, String folder);
 
     void delete(String filename, String folder);
+
+    String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks, String originalFilename,
+            String folder);
 }

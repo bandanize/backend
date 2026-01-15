@@ -33,4 +33,9 @@ public class StorageService {
     public void deleteFile(String filename, String folder) {
         fileStorageService.delete(filename, folder);
     }
+
+    public String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks,
+            String originalFilename, String folder) {
+        return fileStorageService.storeChunk(file, uploadId, chunkIndex, totalChunks, originalFilename, folder);
+    }
 }

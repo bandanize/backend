@@ -79,4 +79,45 @@ public class UploadController {
                     .body("Error uploading file: " + e.getMessage());
         }
     }
+
+    /**
+     * Uploads a chunk of a file.
+     *
+     * @param file             The chunk file.
+     * @param chunkIndex       The index of the chunk.
+     * @param totalChunks      The total number of chunks.
+     * @param uploadId         The unique ID for this upload session.
+     * @param originalFilename The original filename.
+     * @param folder           The target folder (optional, defaults to 'files').
+     * @return ResponseEntity with the upload status.
+     */
+    @PostMapping("/chunk")
+    public ResponseEntity<String> uploadChunk(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("chunkIndex") int chunkIndex,
+            @RequestParam("totalChunks") int totalChunks,
+            @RequestParam("uploadId") String uploadId,
+            @RequestParam("originalFilename") String originalFilename,
+            @RequestParam(value = "folder", defaultValue = "files") String folder) {
+        try {
+            // Map frontend folder names to backend folder names if needed
+            String targetFolder = folder;
+            if ("image".equals(folder))
+                targetFolder = "images";
+            else if ("audio".equals(folder))
+                targetFolder = "audio"; // singular in backend
+            else if ("video".equals(folder))
+                targetFolder = "videos";
+            else if ("file".equals(folder))
+                targetFolder = "files";
+
+            String result = storageService.storeChunk(file, uploadId, chunkIndex, totalChunks, originalFilename,
+                    targetFolder);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error uploading chunk: " + e.getMessage());
+        }
+    }
 }
