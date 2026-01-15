@@ -31,14 +31,16 @@ public class BandService {
         this.invitationRepository = invitationRepository;
     }
 
-    // ... existing getAllBands ...
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<BandDTO> getAllBands() {
+
         return bandRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     // ... existing getBandById ...
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public BandDTO getBandById(Long id) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
@@ -46,12 +48,14 @@ public class BandService {
     }
 
     // ... existing createBand ...
+    @org.springframework.transaction.annotation.Transactional
     public BandDTO createBand(BandModel band) {
         BandModel savedBand = bandRepository.save(band);
         return convertToDTO(savedBand);
     }
 
     // ... existing createBandWithUser ...
+    @org.springframework.transaction.annotation.Transactional
     public BandDTO createBandWithUser(Long userId, BandModel bandDetails) {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -74,6 +78,7 @@ public class BandService {
     }
 
     // ... existing updateBand ...
+    @org.springframework.transaction.annotation.Transactional
     public BandDTO updateBand(Long id, BandModel bandDetails) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
@@ -97,6 +102,7 @@ public class BandService {
     }
 
     // ... existing getBandsByUsername ...
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<BandDTO> getBandsByUsername(String username) {
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
@@ -113,6 +119,7 @@ public class BandService {
      * @param bandId The ID of the band.
      * @param email  The email of the user to invite.
      */
+    @org.springframework.transaction.annotation.Transactional
     public void inviteMember(Long bandId, String email) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
@@ -162,6 +169,7 @@ public class BandService {
                 .collect(Collectors.toList());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void acceptInvitation(Long invitationId) {
         com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
@@ -174,12 +182,20 @@ public class BandService {
         UserModel user = invitation.getInvitedUser();
 
         band.getUsers().add(user);
+        // Ensure bidirectional consistency if mappedBy is used, though users is owner
+        // here
+        // But safe to be explicit if session is open
+        if (!user.getBands().contains(band)) {
+            user.getBands().add(band);
+        }
+
         bandRepository.save(band); // Cascades to user if set up, ensuring consistent relationship
 
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.ACCEPTED);
         invitationRepository.save(invitation);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void rejectInvitation(Long invitationId) {
         com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
@@ -188,6 +204,7 @@ public class BandService {
         invitationRepository.save(invitation);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void leaveBand(Long bandId, Long userId) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
@@ -207,6 +224,7 @@ public class BandService {
     }
 
     // ... existing addChatMessage ...
+    @org.springframework.transaction.annotation.Transactional
     public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
             com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
         BandModel band = bandRepository.findById(bandId)
