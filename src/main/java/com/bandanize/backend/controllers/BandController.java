@@ -140,6 +140,25 @@ public class BandController {
     }
 
     /**
+     * Deletes a band.
+     * Only the owner can delete a band.
+     *
+     * @param id          The ID of the band.
+     * @param userDetails The authenticated user.
+     * @return ResponseEntity with success message.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteBand(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        // Fetch user ID (similar to leaveBand workaround, best is to have ID in
+        // UserDetails or service lookup)
+        com.bandanize.backend.dtos.UserDTO user = com.bandanize.backend.context.SpringContext
+                .getBean(com.bandanize.backend.services.UserService.class).getUserByUsername(userDetails.getUsername());
+
+        bandService.deleteBand(id, user.getId());
+        return ResponseEntity.ok("Band deleted successfully");
+    }
+
+    /**
      * Adds a chat message to the band.
      *
      * @param bandId  The ID of the band.
