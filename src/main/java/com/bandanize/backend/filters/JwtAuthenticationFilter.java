@@ -46,11 +46,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userRepository.findByUsername(username)
                     .orElse(null);
 
-            if (userDetails != null && jwtService.validateToken(jwt, userDetails)) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (userDetails != null) {
+                // Self-Healing: If user was disabled by the Cascade bug, re-enable them
+                if (!userDetails.isEnabled()) {
+                    com.bandanize.backend.models.UserModel userModel = (com.bandanize.backend.models.UserModel) userDetails;
+                    userModel.setDisabled(false);
+                    userRepository.save(userModel);
+                    // Reload to be sure
+                    userDetails = userModel;
+                    System.out.println("SELF-HEALING: Re-enabled user " + username);
+                }
+
+                if (jwtService.validateToken(jwt, userDetails)) {
+                    var authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
         }
 
