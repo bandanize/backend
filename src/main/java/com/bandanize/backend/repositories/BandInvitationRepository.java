@@ -13,4 +13,6 @@ public interface BandInvitationRepository extends JpaRepository<BandInvitationMo
     List<BandInvitationModel> findByInvitedUserIdAndStatus(Long userId, InvitationStatus status);
 
     Optional<BandInvitationModel> findByBandIdAndInvitedUserId(Long bandId, Long userId);
+
+    void deleteByInvitedUser(com.bandanize.backend.models.UserModel invitedUser);
 }

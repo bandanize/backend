@@ -5,6 +5,8 @@ import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.BandModel;
 import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.repositories.BandRepository;
+import com.bandanize.backend.repositories.BandInvitationRepository;
+import com.bandanize.backend.repositories.ChatMessageRepository;
 import com.bandanize.backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,13 +23,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BandRepository bandRepository;
+    private final BandInvitationRepository bandInvitationRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, BandRepository bandRepository,
+    public UserService(UserRepository userRepository,
+            BandRepository bandRepository,
+            BandInvitationRepository bandInvitationRepository,
+            ChatMessageRepository chatMessageRepository,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.bandRepository = bandRepository;
+        this.bandInvitationRepository = bandInvitationRepository;
+        this.chatMessageRepository = chatMessageRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -117,17 +126,40 @@ public class UserService {
      * @param id The ID of the user to delete.
      * @throws ResourceNotFoundException if the user is not found.
      */
+    @org.springframework.transaction.annotation.Transactional
     public void deleteUser(Long id) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        // Remove the user from all associated bands
-        for (BandModel band : user.getBands()) {
+        // 1. Delete all invitations for this user
+        bandInvitationRepository.deleteByInvitedUser(user);
+
+        // 2. Anonymize chat messages sent by this user (set sender to null)
+        // Note: Owned bands deletion might delete some messages via cascade, but we do
+        // this first safely.
+        List<com.bandanize.backend.models.ChatMessageModel> messages = chatMessageRepository.findBySender(user);
+        for (com.bandanize.backend.models.ChatMessageModel msg : messages) {
+            msg.setSender(null);
+        }
+        chatMessageRepository.saveAll(messages);
+
+        // 3. Delete bands owned by the user (Cascading delete)
+        List<BandModel> ownedBands = bandRepository.findByOwner(user);
+        bandRepository.deleteAll(ownedBands);
+
+        // 4. Remove the user from all associated bands (Membership)
+        // Use a copy of the list to avoid ConcurrentModificationException if modifying
+        // the collection
+        // However, we are modifying the *band's* user list, not the user's band list
+        // directly iterated?
+        // Actually, user.getBands() is the owning side inverse.
+        // Safer to iterate and remove.
+        for (BandModel band : new java.util.ArrayList<>(user.getBands())) {
             band.getUsers().remove(user);
             bandRepository.save(band);
         }
 
-        // Delete the user
+        // 5. Delete the user
         userRepository.delete(user);
     }
 
