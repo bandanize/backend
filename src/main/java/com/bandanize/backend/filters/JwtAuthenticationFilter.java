@@ -66,7 +66,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userModel.setDisabled(false);
                             userRepository.save(userModel);
                             // Refresh userDetails
-                            userDetails = userRepository.findByUsername(username).orElse(userDetails);
+                            userDetails = userRepository.findByUsername(username).orElse(null);
+                            if (userDetails == null) {
+                                // Should not happen, but safe fallback
+                                System.out.println("CRITICAL: User disappeared after save!");
+                            }
                             System.out.println("SELF-HEALING SUCCESS: Re-enabled user " + username);
                         } catch (Exception e) {
                             System.out.println("SELF-HEALING FAILED: " + e.getMessage());
