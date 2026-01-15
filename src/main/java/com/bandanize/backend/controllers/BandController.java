@@ -72,8 +72,9 @@ public class BandController {
      * @return ResponseEntity with the updated BandDTO.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<BandDTO> updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails) {
-        BandDTO updatedBand = bandService.updateBand(id, bandDetails);
+    public ResponseEntity<BandDTO> updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        BandDTO updatedBand = bandService.updateBand(id, bandDetails, userDetails.getUsername());
         return ResponseEntity.ok(updatedBand);
     }
 
@@ -109,12 +110,13 @@ public class BandController {
      * @return ResponseEntity with success message.
      */
     @PostMapping("/{bandId}/invite")
-    public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         String email = body.get("email");
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
-        bandService.inviteMember(bandId, email);
+        bandService.inviteMember(bandId, email, userDetails.getUsername());
         return ResponseEntity.ok("Invitation sent successfully");
     }
 
@@ -128,14 +130,7 @@ public class BandController {
     @PostMapping("/{bandId}/leave")
     public ResponseEntity<String> leaveBand(@PathVariable Long bandId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // We need the user ID. We can get it from the service via username, or if
-        // UserDetails is our UserPrincipal
-        // For now, fetch ID via service
-        // Assuming we can get the ID somehow.
-        // Best practice: Service gets user by username.
-        com.bandanize.backend.dtos.UserDTO user = com.bandanize.backend.context.SpringContext
-                .getBean(com.bandanize.backend.services.UserService.class).getUserByUsername(userDetails.getUsername());
-        bandService.leaveBand(bandId, user.getId());
+        bandService.leaveBand(bandId, userDetails.getUsername());
         return ResponseEntity.ok("Left band successfully");
     }
 
@@ -148,8 +143,10 @@ public class BandController {
      */
     @PostMapping("/{bandId}/chat")
     public ResponseEntity<com.bandanize.backend.models.ChatMessageModel> addChatMessage(@PathVariable Long bandId,
-            @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
-        com.bandanize.backend.models.ChatMessageModel savedMessage = bandService.addChatMessage(bandId, request);
+            @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.bandanize.backend.models.ChatMessageModel savedMessage = bandService.addChatMessage(bandId, request,
+                userDetails.getUsername());
         return ResponseEntity.ok(savedMessage);
     }
 

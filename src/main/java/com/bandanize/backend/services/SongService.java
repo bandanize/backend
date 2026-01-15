@@ -19,10 +19,20 @@ public class SongService {
     @Autowired
     private BandRepository bandRepository;
 
+    private void verifyMember(BandModel band, String username) {
+        boolean isMember = band.getUsers().stream()
+                .anyMatch(u -> u.getUsername().equals(username));
+        if (!isMember) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not a member of this band (" + band.getName() + ")");
+        }
+    }
+
     // --- SongList ---
-    public SongListModel createSongList(Long bandId, SongListModel songList) {
+    public SongListModel createSongList(Long bandId, SongListModel songList, String username) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+        verifyMember(band, username);
         songList.setBand(band);
         return songListRepository.save(songList);
     }
@@ -31,30 +41,38 @@ public class SongService {
         return songListRepository.findByBandId(bandId);
     }
 
-    public SongListModel updateSongList(Long listId, SongListModel details) {
+    public SongListModel updateSongList(Long listId, SongListModel details, String username) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+        verifyMember(list.getBand(), username);
+
         if (details.getName() != null) {
             list.setName(details.getName());
         }
         return songListRepository.save(list);
     }
 
-    public void deleteSongList(Long listId) {
+    public void deleteSongList(Long listId, String username) {
+        SongListModel list = songListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+        verifyMember(list.getBand(), username);
         songListRepository.deleteById(listId);
     }
 
     // --- Song ---
-    public SongModel addSong(Long listId, SongModel song) {
+    public SongModel addSong(Long listId, SongModel song, String username) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+        verifyMember(list.getBand(), username);
         song.setSongList(list);
         return songRepository.save(song);
     }
 
-    public SongModel updateSong(Long songId, SongModel details) {
+    public SongModel updateSong(Long songId, SongModel details, String username) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        verifyMember(song.getSongList().getBand(), username);
+
         if (details.getName() != null)
             song.setName(details.getName());
         if (details.getBpm() != 0)
@@ -69,21 +87,27 @@ public class SongService {
         return songRepository.save(song);
     }
 
-    public void deleteSong(Long songId) {
+    public void deleteSong(Long songId, String username) {
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        verifyMember(song.getSongList().getBand(), username);
         songRepository.deleteById(songId);
     }
 
     // --- Tablature ---
-    public TablatureModel addTablature(Long songId, TablatureModel tab) {
+    public TablatureModel addTablature(Long songId, TablatureModel tab, String username) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        verifyMember(song.getSongList().getBand(), username);
         tab.setSong(song);
         return tablatureRepository.save(tab);
     }
 
-    public TablatureModel updateTablature(Long tabId, TablatureModel details) {
+    public TablatureModel updateTablature(Long tabId, TablatureModel details, String username) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        verifyMember(tab.getSong().getSongList().getBand(), username);
+
         if (details.getName() != null)
             tab.setName(details.getName());
         if (details.getInstrument() != null)
@@ -100,20 +124,25 @@ public class SongService {
         return tablatureRepository.save(tab);
     }
 
-    public void deleteTablature(Long tabId) {
+    public void deleteTablature(Long tabId, String username) {
+        TablatureModel tab = tablatureRepository.findById(tabId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        verifyMember(tab.getSong().getSongList().getBand(), username);
         tablatureRepository.deleteById(tabId);
     }
 
-    public SongModel addFileToSong(Long songId, MediaFile file) {
+    public SongModel addFileToSong(Long songId, MediaFile file, String username) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        verifyMember(song.getSongList().getBand(), username);
         song.getFiles().add(file);
         return songRepository.save(song);
     }
 
-    public TablatureModel addFileToTablature(Long tabId, MediaFile file) {
+    public TablatureModel addFileToTablature(Long tabId, MediaFile file, String username) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        verifyMember(tab.getSong().getSongList().getBand(), username);
         tab.getFiles().add(file);
         return tablatureRepository.save(tab);
     }
@@ -121,9 +150,10 @@ public class SongService {
     @Autowired
     private StorageService storageService;
 
-    public SongModel removeFileFromSong(Long songId, String fileUrl) {
+    public SongModel removeFileFromSong(Long songId, String fileUrl, String username) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        verifyMember(song.getSongList().getBand(), username);
 
         MediaFile fileToRemove = song.getFiles().stream()
                 .filter(f -> f.getUrl().equals(fileUrl))
@@ -138,9 +168,10 @@ public class SongService {
         return songRepository.save(song);
     }
 
-    public TablatureModel removeFileFromTablature(Long tabId, String fileUrl) {
+    public TablatureModel removeFileFromTablature(Long tabId, String fileUrl, String username) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        verifyMember(tab.getSong().getSongList().getBand(), username);
 
         MediaFile fileToRemove = tab.getFiles().stream()
                 .filter(f -> f.getUrl().equals(fileUrl))

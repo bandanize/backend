@@ -79,9 +79,14 @@ public class BandService {
 
     // ... existing updateBand ...
     @org.springframework.transaction.annotation.Transactional
-    public BandDTO updateBand(Long id, BandModel bandDetails) {
+    public BandDTO updateBand(Long id, BandModel bandDetails, String username) {
         BandModel band = bandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + id));
+
+        if (!band.getOwner().getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Only the band owner can update details");
+        }
 
         if (bandDetails.getName() != null)
             band.setName(bandDetails.getName());
@@ -116,13 +121,19 @@ public class BandService {
      * Sends an invitation to a user to join a band.
      * Replaces immediate adding.
      *
-     * @param bandId The ID of the band.
-     * @param email  The email of the user to invite.
+     * @param bandId   The ID of the band.
+     * @param email    The email of the user to invite.
+     * @param username The username of the requester.
      */
     @org.springframework.transaction.annotation.Transactional
-    public void inviteMember(Long bandId, String email) {
+    public void inviteMember(Long bandId, String email, String username) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        if (!band.getOwner().getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Only the band owner can invite members");
+        }
 
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
@@ -205,10 +216,10 @@ public class BandService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public void leaveBand(Long bandId, Long userId) {
+    public void leaveBand(Long bandId, String username) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
-        UserModel user = userRepository.findById(userId)
+        UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!band.getUsers().contains(user)) {
@@ -226,12 +237,16 @@ public class BandService {
     // ... existing addChatMessage ...
     @org.springframework.transaction.annotation.Transactional
     public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
-            com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
+            com.bandanize.backend.dtos.ChatMessageRequestDTO request, String username) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
-        UserModel user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
+        if (!band.getUsers().contains(user)) {
+            throw new org.springframework.security.access.AccessDeniedException("You are not a member of this band");
+        }
 
         com.bandanize.backend.models.ChatMessageModel message = new com.bandanize.backend.models.ChatMessageModel();
         message.setBand(band);

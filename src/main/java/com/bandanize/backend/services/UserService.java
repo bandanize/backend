@@ -93,12 +93,23 @@ public class UserService {
      *
      * @param id          The ID of the user to update.
      * @param userDetails The new user details.
+     * @param username    The username of the requester.
      * @return The updated UserDTO.
-     * @throws ResourceNotFoundException if the user is not found.
+     * @throws ResourceNotFoundException                                 if the user
+     *                                                                   is not
+     *                                                                   found.
+     * @throws org.springframework.security.access.AccessDeniedException if
+     *                                                                   requester
+     *                                                                   is not the
+     *                                                                   user.
      */
-    public UserDTO updateUser(Long id, UserModel userDetails) {
+    public UserDTO updateUser(Long id, UserModel userDetails, String username) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (!user.getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only update your own account");
+        }
 
         // Update only the fields provided in the request body
         if (userDetails.getName() != null)
@@ -123,13 +134,26 @@ public class UserService {
      * Deletes a user by their ID.
      * Removes the user from all associated bands before deletion.
      *
-     * @param id The ID of the user to delete.
-     * @throws ResourceNotFoundException if the user is not found.
+     * @param id       The ID of the user to delete.
+     * @param username The username of the requester.
+     * @throws ResourceNotFoundException                                 if the user
+     *                                                                   is not
+     *                                                                   found.
+     * @throws org.springframework.security.access.AccessDeniedException if
+     *                                                                   requester
+     *                                                                   is not the
+     *                                                                   user.
      */
     @org.springframework.transaction.annotation.Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, String username) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (!user.getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only delete your own account");
+        }
+
+        // 1. Delete all invitations for this user
 
         // 1. Delete all invitations for this user
         bandInvitationRepository.deleteByInvitedUser(user);

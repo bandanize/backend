@@ -98,8 +98,9 @@ public class UserController {
      * @return The updated UserDTO.
      */
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserModel userDetails) {
-        return userService.updateUser(id, userDetails);
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserModel userDetails,
+            @AuthenticationPrincipal UserDetails authUser) {
+        return userService.updateUser(id, userDetails, authUser.getUsername());
     }
 
     /**
@@ -109,8 +110,8 @@ public class UserController {
      * @return ResponseEntity with no content.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal UserDetails authUser) {
+        userService.deleteUser(id, authUser.getUsername());
         return ResponseEntity.noContent().build();
     }
 
