@@ -72,7 +72,8 @@ public class UploadController {
     private ResponseEntity<String> uploadFileInternal(MultipartFile file, String folder) {
         try {
             String filename = storageService.uploadFile(file, folder);
-            return ResponseEntity.ok("File uploaded successfully: " + filename);
+            // Return just the filename so frontend can easily use it
+            return ResponseEntity.ok(filename);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error uploading file: " + e.getMessage());

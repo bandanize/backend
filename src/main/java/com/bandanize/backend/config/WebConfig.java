@@ -7,7 +7,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 @Configuration
-public class WebConfig {
+public class WebConfig implements org.springframework.web.servlet.config.annotation.WebMvcConfigurer {
+
+    @org.springframework.beans.factory.annotation.Value("${storage.location}")
+    private String storageLocation;
 
     @Bean
     public CorsFilter corsFilter() {
@@ -21,5 +24,23 @@ public class WebConfig {
         source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
+    }
+
+    @Override
+    public void addResourceHandlers(
+            org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        String location = storageLocation;
+        if (location == null || location.trim().isEmpty()) {
+            location = "uploads";
+        }
+
+        // Ensure trailing slash
+        if (!location.endsWith("/")) {
+            location += "/";
+        }
+
+        // Map /uploads/** to the file system directory
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + location);
     }
 }

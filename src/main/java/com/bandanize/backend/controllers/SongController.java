@@ -72,4 +72,25 @@ public class SongController {
         songService.deleteTablature(tabId);
         return ResponseEntity.ok().build();
     }
+
+    // --- Media Files ---
+    @PostMapping("/songs/{songId}/files")
+    public ResponseEntity<SongModel> addSongFile(@PathVariable Long songId, @RequestBody MediaFile file) {
+        return ResponseEntity.ok(songService.addFileToSong(songId, file));
+    }
+
+    @PostMapping("/tabs/{tabId}/files")
+    public ResponseEntity<TablatureModel> addTablatureFile(@PathVariable Long tabId, @RequestBody MediaFile file) {
+        return ResponseEntity.ok(songService.addFileToTablature(tabId, file));
+    }
+
+    @DeleteMapping("/songs/{songId}/files")
+    public ResponseEntity<SongModel> deleteSongFile(@PathVariable Long songId, @RequestParam String url) {
+        return ResponseEntity.ok(songService.removeFileFromSong(songId, url));
+    }
+
+    @DeleteMapping("/tabs/{tabId}/files")
+    public ResponseEntity<TablatureModel> deleteTablatureFile(@PathVariable Long tabId, @RequestParam String url) {
+        return ResponseEntity.ok(songService.removeFileFromTablature(tabId, url));
+    }
 }

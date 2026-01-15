@@ -103,4 +103,72 @@ public class SongService {
     public void deleteTablature(Long tabId) {
         tablatureRepository.deleteById(tabId);
     }
+
+    public SongModel addFileToSong(Long songId, MediaFile file) {
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        song.getFiles().add(file);
+        return songRepository.save(song);
+    }
+
+    public TablatureModel addFileToTablature(Long tabId, MediaFile file) {
+        TablatureModel tab = tablatureRepository.findById(tabId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        tab.getFiles().add(file);
+        return tablatureRepository.save(tab);
+    }
+
+    @Autowired
+    private StorageService storageService;
+
+    public SongModel removeFileFromSong(Long songId, String fileUrl) {
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+
+        MediaFile fileToRemove = song.getFiles().stream()
+                .filter(f -> f.getUrl().equals(fileUrl))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+
+        // Delete from storage
+        deleteFileFromStorage(fileToRemove.getUrl());
+
+        // Remove from DB
+        song.getFiles().remove(fileToRemove);
+        return songRepository.save(song);
+    }
+
+    public TablatureModel removeFileFromTablature(Long tabId, String fileUrl) {
+        TablatureModel tab = tablatureRepository.findById(tabId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+
+        MediaFile fileToRemove = tab.getFiles().stream()
+                .filter(f -> f.getUrl().equals(fileUrl))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+
+        // Delete from storage
+        deleteFileFromStorage(fileToRemove.getUrl());
+
+        // Remove from DB
+        tab.getFiles().remove(fileToRemove);
+        return tablatureRepository.save(tab);
+    }
+
+    private void deleteFileFromStorage(String fileUrl) {
+        // Expected URL format: /uploads/{folder}/{filename}
+        try {
+            String[] parts = fileUrl.split("/");
+            if (parts.length >= 2) {
+                String filename = parts[parts.length - 1];
+                String folder = parts[parts.length - 2];
+                storageService.deleteFile(filename, folder);
+            }
+        } catch (Exception e) {
+            // Log warning but don't fail the operation? Or fail?
+            // Failing is safer to keep consistency, but if file is already gone, maybe not.
+            // Let's let it throw for now.
+            throw new RuntimeException("Failed to delete file from storage: " + e.getMessage());
+        }
+    }
 }
