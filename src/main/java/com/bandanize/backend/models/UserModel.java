@@ -34,7 +34,7 @@ public class UserModel implements UserDetails {
     @Column(name = "url")
     private Map<String, String> rrss = new HashMap<>();
 
-    @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "users", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<BandModel> bands = new ArrayList<>();
 

@@ -33,7 +33,7 @@ public class BandModel {
     @JoinColumn(name = "owner_id")
     private UserModel owner;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
     @JoinTable(name = "band_user", joinColumns = @JoinColumn(name = "band_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private List<UserModel> users = new ArrayList<>();
 
