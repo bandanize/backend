@@ -39,8 +39,11 @@ public class WebConfig implements org.springframework.web.servlet.config.annotat
             location += "/";
         }
 
-        // Map /uploads/** to the file system directory
+        // Map /uploads/** (legacy) and /api/uploads/** (new) to the file system
+        // directory
         registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + location);
+        registry.addResourceHandler("/api/uploads/**")
                 .addResourceLocations("file:" + location);
     }
 }
