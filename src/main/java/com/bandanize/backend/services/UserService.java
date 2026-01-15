@@ -138,13 +138,7 @@ public class UserService {
      * @return List of matching UserDTOs.
      */
     public List<UserDTO> searchUsers(String query) {
-        // Search by email first, could extend to username too
-        List<UserModel> users = userRepository.findByEmailContaining(query);
-        if (users.isEmpty()) {
-            users = userRepository.findByUsernameContaining(query);
-        }
-
-        return users.stream()
+        return userRepository.searchUsers(query).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
