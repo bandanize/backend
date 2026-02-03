@@ -238,6 +238,45 @@ public class BandService {
         userRepository.save(user);
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public void removeMember(Long bandId, Long memberId, Long requesterId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+
+        // Determine effective owner
+        Long ownerId = null;
+        if (band.getOwner() != null) {
+            ownerId = band.getOwner().getId();
+        } else if (!band.getUsers().isEmpty()) {
+            // Fallback for legacy data: first user is owner
+            ownerId = band.getUsers().get(0).getId();
+        }
+
+        // Verify requester is owner
+        if (ownerId == null || !ownerId.equals(requesterId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Only the owner can remove members");
+        }
+
+        // Verify we are not removing the owner
+        if (ownerId.equals(memberId)) {
+            throw new IllegalArgumentException("Cannot remove the owner from the band");
+        }
+
+        UserModel member = userRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!band.getUsers().contains(member)) {
+            throw new ResourceNotFoundException("User is not in this band");
+        }
+
+        // Remove relationship
+        band.getUsers().remove(member);
+        member.getBands().remove(band);
+
+        bandRepository.save(band);
+        userRepository.save(member);
+    }
+
     // ... existing addChatMessage ...
     @org.springframework.transaction.annotation.Transactional
     public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
