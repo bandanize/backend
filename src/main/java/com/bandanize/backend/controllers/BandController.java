@@ -136,6 +136,23 @@ public class BandController {
     }
 
     /**
+     * Removes a member from the band.
+     * Only the owner can remove members.
+     * 
+     * @param bandId      The ID of the band.
+     * @param userId      The ID of the user to remove.
+     * @param userDetails The authenticated user (requester).
+     * @return ResponseEntity with success message.
+     */
+    @DeleteMapping("/{bandId}/members/{userId}")
+    public ResponseEntity<String> removeMember(@PathVariable Long bandId, @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO requester = userService.getUserByUsername(userDetails.getUsername());
+        bandService.removeMember(bandId, userId, requester.getId());
+        return ResponseEntity.ok("Member removed successfully");
+    }
+
+    /**
      * Deletes a band.
      * Only the owner can delete a band.
      *
