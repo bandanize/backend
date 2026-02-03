@@ -134,32 +134,32 @@ public class UserService {
         // 1. Delete all invitations for this user
         bandInvitationRepository.deleteByInvitedUser(user);
 
-        // 2. Anonymize chat messages sent by this user (set sender to null)
-        // Note: Owned bands deletion might delete some messages via cascade, but we do
-        // this first safely.
+        // 2. Anonymize chat messages sent by this user
         List<com.bandanize.backend.models.ChatMessageModel> messages = chatMessageRepository.findBySender(user);
         for (com.bandanize.backend.models.ChatMessageModel msg : messages) {
             msg.setSender(null);
         }
         chatMessageRepository.saveAll(messages);
 
-        // 3. Delete bands owned by the user (Cascading delete)
-        List<BandModel> ownedBands = bandRepository.findByOwner(user);
-        bandRepository.deleteAll(ownedBands);
+        // 3. Handle Bands
+        // We need to separate bands owned by the user vs bands the user is just a
+        // member of.
+        // Note: user.getBands() returns ALL bands the user is part of (owned + member).
 
-        // 4. Remove the user from all associated bands (Membership)
-        // Use a copy of the list to avoid ConcurrentModificationException if modifying
-        // the collection
-        // However, we are modifying the *band's* user list, not the user's band list
-        // directly iterated?
-        // Actually, user.getBands() is the owning side inverse.
-        // Safer to iterate and remove.
-        for (BandModel band : new java.util.ArrayList<>(user.getBands())) {
-            band.getUsers().remove(user);
-            bandRepository.save(band);
+        List<BandModel> allBands = new java.util.ArrayList<>(user.getBands());
+
+        for (BandModel band : allBands) {
+            if (band.getOwner() != null && band.getOwner().getId().equals(user.getId())) {
+                // User is the owner -> Delete the band
+                bandRepository.delete(band);
+            } else {
+                // User is just a member -> Remove from band
+                band.getUsers().remove(user);
+                bandRepository.save(band);
+            }
         }
 
-        // 5. Delete the user
+        // 4. Delete the user
         userRepository.delete(user);
     }
 

@@ -109,7 +109,14 @@ public class UserController {
      * @return ResponseEntity with no content.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        UserDTO currentUser = userService.getUserByUsername(userDetails.getUsername());
+
+        // Prevent users from deleting other users
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
