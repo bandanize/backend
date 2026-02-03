@@ -41,7 +41,16 @@ public class SongService {
     }
 
     public void deleteSongList(Long listId) {
-        songListRepository.deleteById(listId);
+        SongListModel list = songListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+
+        // Delete all songs (which triggers file cleanup)
+        for (SongModel song : list.getSongs()) {
+            // Recursively clean up song files
+            cleanupSongFiles(song);
+        }
+
+        songListRepository.delete(list);
     }
 
     // --- Song ---
@@ -70,7 +79,26 @@ public class SongService {
     }
 
     public void deleteSong(Long songId) {
-        songRepository.deleteById(songId);
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+
+        cleanupSongFiles(song);
+
+        songRepository.delete(song);
+    }
+
+    private void cleanupSongFiles(SongModel song) {
+        // Delete song files
+        for (MediaFile file : song.getFiles()) {
+            deleteFileFromStorage(file.getUrl());
+        }
+
+        // Delete tablature files
+        for (TablatureModel tab : song.getTablatures()) {
+            for (MediaFile file : tab.getFiles()) {
+                deleteFileFromStorage(file.getUrl());
+            }
+        }
     }
 
     // --- Tablature ---
@@ -101,7 +129,15 @@ public class SongService {
     }
 
     public void deleteTablature(Long tabId) {
-        tablatureRepository.deleteById(tabId);
+        TablatureModel tab = tablatureRepository.findById(tabId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+
+        // Clean up files
+        for (MediaFile file : tab.getFiles()) {
+            deleteFileFromStorage(file.getUrl());
+        }
+
+        tablatureRepository.delete(tab);
     }
 
     public SongModel addFileToSong(Long songId, MediaFile file) {

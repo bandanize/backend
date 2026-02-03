@@ -22,14 +22,29 @@ public class BandService {
     private final BandRepository bandRepository;
     private final UserRepository userRepository;
     private final com.bandanize.backend.repositories.BandInvitationRepository invitationRepository;
+    private final SongService songService;
+    private final StorageService storageService;
 
     @Autowired
     public BandService(BandRepository bandRepository, UserRepository userRepository,
-            com.bandanize.backend.repositories.BandInvitationRepository invitationRepository) {
+            com.bandanize.backend.repositories.BandInvitationRepository invitationRepository,
+            SongService songService, StorageService storageService) {
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
         this.invitationRepository = invitationRepository;
+        this.songService = songService;
+        this.storageService = storageService;
     }
+
+    // ... (keep intermediate methods if matching range, but I'll skip to deleteBand
+    // if possible or just replace the updated blocks)
+    // Wait, the replaced block includes the constructor, so I must match that.
+
+    // I can't replace huge blocks with scattered changes easily.
+    // I will use replace_file_content on specific chunks.
+
+    // Chunk 1: Constructor fields
+    // Chunk 2: deleteBand method
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<BandDTO> getAllBands() {
@@ -258,10 +273,46 @@ public class BandService {
             }
         }
 
+        // Delete photo if exists
+        if (band.getPhoto() != null && !band.getPhoto().isEmpty()) {
+            // Helper method for cleaning up URL like in SongService?
+            // Let's copy the logic or expose it?
+            // Simpler: duplicate the small logic or assumes it's managed.
+            // Given I injected StorageService, I can call deleteFile.
+            try {
+                String photoUrl = band.getPhoto();
+                if (photoUrl.contains("/uploads/")) {
+                    String[] parts = photoUrl.split("/");
+                    if (parts.length >= 2) {
+                        String filename = parts[parts.length - 1];
+                        String folder = parts[parts.length - 2];
+                        storageService.deleteFile(filename, folder);
+                    }
+                }
+            } catch (Exception e) {
+                // ignore or log
+            }
+        }
+
+        // Clear song lists explicitly to trigger file cleanup
+        // We use a copy of the list to avoid concurrent modification during iteration
+        // if we were removing,
+        // but here we call deleteSongList which deletes from DB.
+        // We need to fetch lists or use the existing ones.
+        // Note: deleteSongList deletes from Repo.
+        List<Long> listIds = band.getSongLists().stream().map(com.bandanize.backend.models.SongListModel::getId)
+                .collect(Collectors.toList());
+        for (Long listId : listIds) {
+            songService.deleteSongList(listId);
+        }
+
         // Clear associations
         // This removes the band from the join table for all users
         band.getUsers().clear();
         bandRepository.save(band);
+
+        // Reload band to ensure lists are detached? Or just delete.
+        // Since we deleted lists explicitly, we should be fine.
 
         // Delete the band
         bandRepository.delete(band);
