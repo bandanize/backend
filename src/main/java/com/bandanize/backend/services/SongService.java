@@ -72,7 +72,7 @@ public class SongService {
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
         if (details.getName() != null)
             song.setName(details.getName());
-        if (details.getBpm() != 0)
+        if (details.getBpm() != null)
             song.setBpm(details.getBpm());
         if (details.getSongKey() != null)
             song.setSongKey(details.getSongKey());
