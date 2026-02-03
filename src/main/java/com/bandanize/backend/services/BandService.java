@@ -251,33 +251,19 @@ public class BandService {
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
         if (band.getOwner() == null || !band.getOwner().getId().equals(requesterUserId)) {
-            // Only the owner can delete, or if no owner exists (legacy?), assume permission
-            // for now, but strict check is better.
+            // Only the owner can delete
             if (band.getOwner() != null) {
-                // Check if user is also owner (redundant but safe)
                 throw new org.springframework.security.access.AccessDeniedException(
                         "Only the owner can delete the band");
             }
         }
 
-        // JPA cascades should handle SongLists, Songs, ChatMessages if configured with
-        // CascadeType.ALL or orphanRemoval.
-        // But the ManyToMany relationship with Users needs careful handling.
-        // We must remove this band from all users' band lists before deleting?
-        // Actually, if Band is the owner of the relationship in specific ways or if
-        // mappedBy is used correctly...
-        // BandModel owns the relationship "users" via @JoinTable.
-        // UserModel has "bands" mappedBy "users".
-
-        // Explicitly clear associations to be safe and avoid constraint violations if
-        // Cascade DELETE isn't perfect
-        for (UserModel user : band.getUsers()) {
-            user.getBands().remove(band);
-            userRepository.save(user); // Update user side
-        }
+        // Clear associations
+        // This removes the band from the join table for all users
         band.getUsers().clear();
-        bandRepository.save(band); // Save empty relationship
+        bandRepository.save(band);
 
+        // Delete the band
         bandRepository.delete(band);
     }
 

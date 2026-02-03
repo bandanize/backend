@@ -24,10 +24,12 @@ import java.util.Map;
 public class BandController {
 
     private final BandService bandService;
+    private final com.bandanize.backend.services.UserService userService;
 
     @Autowired
-    public BandController(BandService bandService) {
+    public BandController(BandService bandService, com.bandanize.backend.services.UserService userService) {
         this.bandService = bandService;
+        this.userService = userService;
     }
 
     /**
@@ -128,13 +130,7 @@ public class BandController {
     @PostMapping("/{bandId}/leave")
     public ResponseEntity<String> leaveBand(@PathVariable Long bandId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // We need the user ID. We can get it from the service via username, or if
-        // UserDetails is our UserPrincipal
-        // For now, fetch ID via service
-        // Assuming we can get the ID somehow.
-        // Best practice: Service gets user by username.
-        com.bandanize.backend.dtos.UserDTO user = com.bandanize.backend.context.SpringContext
-                .getBean(com.bandanize.backend.services.UserService.class).getUserByUsername(userDetails.getUsername());
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
         bandService.leaveBand(bandId, user.getId());
         return ResponseEntity.ok("Left band successfully");
     }
@@ -149,10 +145,7 @@ public class BandController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBand(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        // Fetch user ID (similar to leaveBand workaround, best is to have ID in
-        // UserDetails or service lookup)
-        com.bandanize.backend.dtos.UserDTO user = com.bandanize.backend.context.SpringContext
-                .getBean(com.bandanize.backend.services.UserService.class).getUserByUsername(userDetails.getUsername());
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
 
         bandService.deleteBand(id, user.getId());
         return ResponseEntity.ok("Band deleted successfully");
