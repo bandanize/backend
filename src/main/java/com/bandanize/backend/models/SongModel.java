@@ -17,6 +17,9 @@ public class SongModel {
     private String songKey; // 'key' is a reserved keyword in some DBs
     private String originalBand;
 
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "song_list_id")
     @JsonBackReference
@@ -68,6 +71,14 @@ public class SongModel {
 
     public void setOriginalBand(String originalBand) {
         this.originalBand = originalBand;
+    }
+
+    public Integer getOrderIndex() {
+        return orderIndex;
+    }
+
+    public void setOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
     }
 
     public SongListModel getSongList() {

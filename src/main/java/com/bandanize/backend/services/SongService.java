@@ -58,6 +58,12 @@ public class SongService {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
         song.setSongList(list);
+
+        // Set default order index to current size (append to end)
+        if (song.getOrderIndex() == null) {
+            song.setOrderIndex(list.getSongs().size());
+        }
+
         return songRepository.save(song);
     }
 
@@ -85,6 +91,30 @@ public class SongService {
         cleanupSongFiles(song);
 
         songRepository.delete(song);
+    }
+
+    public void reorderSongs(Long listId, List<Long> songIds) {
+        SongListModel list = songListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+
+        // Setup a map for faster lookup or just iterate if list is small.
+        // Lists are usually small (< 100 songs), so iterating is fine but let's be
+        // safe.
+        // Actually we need to update the entities.
+
+        List<SongModel> songs = list.getSongs();
+        for (int i = 0; i < songIds.size(); i++) {
+            Long songId = songIds.get(i);
+            // find the song in the list
+            for (SongModel s : songs) {
+                if (s.getId().equals(songId)) {
+                    s.setOrderIndex(i);
+                    break;
+                }
+            }
+        }
+
+        songListRepository.save(list);
     }
 
     private void cleanupSongFiles(SongModel song) {

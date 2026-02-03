@@ -38,6 +38,12 @@ public class SongController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/songlists/{listId}/reorder")
+    public ResponseEntity<Void> reorderSongs(@PathVariable Long listId, @RequestBody List<Long> songIds) {
+        songService.reorderSongs(listId, songIds);
+        return ResponseEntity.ok().build();
+    }
+
     // --- Songs ---
     @PostMapping("/songlists/{listId}/songs")
     public ResponseEntity<SongModel> addSong(@PathVariable Long listId, @RequestBody SongModel song) {

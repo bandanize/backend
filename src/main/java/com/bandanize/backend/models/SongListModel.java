@@ -20,6 +20,7 @@ public class SongListModel {
     private BandModel band;
 
     @OneToMany(mappedBy = "songList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
     @JsonManagedReference
     private List<SongModel> songs = new ArrayList<>();
 
