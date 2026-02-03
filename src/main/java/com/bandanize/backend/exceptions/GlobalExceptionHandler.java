@@ -12,7 +12,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Username or email already exists");
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("Data Integrity Violation: " + ex.getRootCause().getMessage());
     }
 
     @ExceptionHandler(ExpiredJwtException.class)

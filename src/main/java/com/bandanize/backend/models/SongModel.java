@@ -13,7 +13,7 @@ public class SongModel {
     private Long id;
 
     private String name;
-    private int bpm;
+    private Integer bpm;
     private String songKey; // 'key' is a reserved keyword in some DBs
     private String originalBand;
 
@@ -49,11 +49,11 @@ public class SongModel {
         this.name = name;
     }
 
-    public int getBpm() {
+    public Integer getBpm() {
         return bpm;
     }
 
-    public void setBpm(int bpm) {
+    public void setBpm(Integer bpm) {
         this.bpm = bpm;
     }
 
