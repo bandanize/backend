@@ -51,8 +51,9 @@ public class SongController {
     }
 
     @PutMapping("/songs/{songId}")
-    public ResponseEntity<SongModel> updateSong(@PathVariable Long songId, @RequestBody SongModel details) {
-        return ResponseEntity.ok(songService.updateSong(songId, details));
+    public ResponseEntity<SongModel> updateSong(@PathVariable Long songId,
+            @RequestBody java.util.Map<String, Object> updates) {
+        return ResponseEntity.ok(songService.updateSong(songId, updates));
     }
 
     @DeleteMapping("/songs/{songId}")
@@ -70,6 +71,9 @@ public class SongController {
     @PutMapping("/tabs/{tabId}")
     public ResponseEntity<TablatureModel> updateTablature(@PathVariable Long tabId,
             @RequestBody TablatureModel details) {
+        System.out.println("Received update for tabId: " + tabId);
+        System.out.println("Payload: name=" + details.getName() + ", inst=" + details.getInstrument() + ", icon="
+                + details.getInstrumentIcon() + ", tuning=" + details.getTuning());
         return ResponseEntity.ok(songService.updateTablature(tabId, details));
     }
 

@@ -67,21 +67,38 @@ public class SongService {
         return songRepository.save(song);
     }
 
-    public SongModel updateSong(Long songId, SongModel details) {
+    @org.springframework.transaction.annotation.Transactional
+    public SongModel updateSong(Long songId, java.util.Map<String, Object> updates) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
-        if (details.getName() != null)
-            song.setName(details.getName());
-        if (details.getBpm() != null)
-            song.setBpm(details.getBpm());
-        if (details.getSongKey() != null)
-            song.setSongKey(details.getSongKey());
-        if (details.getOriginalBand() != null)
-            song.setOriginalBand(details.getOriginalBand());
-        if (details.getFiles() != null) {
-            song.setFiles(details.getFiles());
+
+        if (updates.containsKey("name")) {
+            song.setName((String) updates.get("name"));
         }
-        return songRepository.save(song);
+        if (updates.containsKey("bpm")) {
+            Object bpmVal = updates.get("bpm");
+            if (bpmVal == null) {
+                song.setBpm(null);
+            } else if (bpmVal instanceof Number) {
+                song.setBpm(((Number) bpmVal).intValue());
+            } else if (bpmVal instanceof String && !((String) bpmVal).isEmpty()) {
+                try {
+                    song.setBpm(Integer.parseInt((String) bpmVal));
+                } catch (NumberFormatException e) {
+                    // ignore or set null
+                }
+            } else {
+                song.setBpm(null);
+            }
+        }
+        if (updates.containsKey("songKey")) {
+            song.setSongKey((String) updates.get("songKey"));
+        }
+        if (updates.containsKey("originalBand")) {
+            song.setOriginalBand((String) updates.get("originalBand"));
+        }
+
+        return songRepository.saveAndFlush(song);
     }
 
     public void deleteSong(Long songId) {
@@ -155,7 +172,8 @@ public class SongService {
         if (details.getFiles() != null) {
             tab.setFiles(details.getFiles());
         }
-        return tablatureRepository.save(tab);
+        System.out.println("Saving tab update to DB...");
+        return tablatureRepository.saveAndFlush(tab);
     }
 
     public void deleteTablature(Long tabId) {
