@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.4</version>
+		<version>3.4.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.bandanize</groupId>
 	<artifactId>backend</artifactId>
-	<version>0.3.6</version>
+	<version>0.3.7</version>
 	<name>backend</name>
 	<description>Bandanize backend</description>
 	<url/>
@@ -28,6 +28,11 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<!-- Override versions to fix vulnerabilities -->
+		<spring-security.version>6.4.10</spring-security.version>
+		<spring-framework.version>6.2.11</spring-framework.version>
+		<tomcat.version>10.1.45</tomcat.version>
+		<postgresql.version>42.7.7</postgresql.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -62,6 +67,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
