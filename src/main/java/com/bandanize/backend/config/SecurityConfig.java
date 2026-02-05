@@ -67,16 +67,18 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.Arrays.asList(
+        // Restrict CORS to specific trusted domains
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
+                "https://bandanize.pages.dev", // Allow specific app instance
                 "https://bandanize.com",
-                "http://bandanize.com",
-                "https://www.bandanize.com",
-                "http://www.bandanize.com"));
-        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                "https://*.bandanize.com",
+                "https://*.rdvl.net"));
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(java.util.Arrays.asList("Content-Disposition")); // Allow downloading filenames
 
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
