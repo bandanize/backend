@@ -71,7 +71,6 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "https://bandanize.pages.dev", // Allow specific app instance
                 "https://bandanize.com",
                 "https://*.bandanize.com",
                 "https://*.rdvl.net"));
