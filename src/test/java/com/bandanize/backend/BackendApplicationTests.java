@@ -1,18 +1,27 @@
 package com.bandanize.backend;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BackendApplicationTests {
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @LocalServerPort
+    private int port;
+
+    private WebTestClient webClient;
+
+    @BeforeEach
+    void setUp() {
+        webClient = WebTestClient.bindToServer()
+                .baseUrl("http://localhost:" + port)
+                .build();
+    }
 
     @Test
     void contextLoads() {
@@ -20,8 +29,11 @@ class BackendApplicationTests {
 
     @Test
     void testHealthCheck() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);
-        assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        assertThat(response.getBody()).contains("\"status\":\"UP\"");
+        webClient.get().uri("/actuator/health")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).consumeWith(response -> {
+                    assertThat(response.getResponseBody()).contains("\"status\":\"UP\"");
+                });
     }
 }
