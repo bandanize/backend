@@ -39,6 +39,23 @@ public class AuthController {
     }
 
     /**
+     * Validates the current token and returns user details.
+     *
+     * @param authentication The authentication object.
+     * @return ResponseEntity with the user details.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> me(org.springframework.security.core.Authentication authentication) {
+        String username = authentication.getName();
+        UserModel user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return ResponseEntity
+                .ok(new AuthResponse("VALID", user.getId(), user.getUsername(), user.getEmail(), user.getName()));
+    }
+
+    /**
      * Authenticates a user and returns a JWT token.
      *
      * @param authRequest The login request containing username and password.
