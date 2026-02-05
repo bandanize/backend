@@ -9,9 +9,6 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
-# Fix CVE-2026-24515
-RUN apk add --no-cache 'libexpat>=2.7.4-r0'
-
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar ./backend.jar
