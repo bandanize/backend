@@ -70,10 +70,10 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(java.util.Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "https://bandanize.pages.dev",
-                "http://bandanize.pages.dev",
-                "https://bandanize.rdvl.net",
-                "http://bandanize.rdvl.net"));
+                "https://bandanize.com",
+                "http://bandanize.com",
+                "https://www.bandanize.com",
+                "http://www.bandanize.com"));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
