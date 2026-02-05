@@ -57,7 +57,7 @@ jobs:
         id: check_tag
         uses: mukunku/tag-exists-action@v1.6.0
         with: 
-          tag: "backend-v${{ steps.version.outputs.VERSION }}"
+          tag: "${{ steps.version.outputs.VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -80,16 +80,16 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/backend:latest
-            ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
 
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "backend-v${{ steps.version.outputs.VERSION }}"
-          name: "Backend v${{ steps.version.outputs.VERSION }}"
-          body: "Automated release for version ${{ steps.version.outputs.VERSION }}"
+          tag_name: "${{ steps.version.outputs.VERSION }}"
+          name: "${{ steps.version.outputs.VERSION }}"
+          generate_release_notes: true
           draft: false
           prerelease: false
         env:
