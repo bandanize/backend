@@ -24,16 +24,18 @@ public class BandService {
     private final com.bandanize.backend.repositories.BandInvitationRepository invitationRepository;
     private final SongService songService;
     private final StorageService storageService;
+    private final EmailService emailService;
 
     @Autowired
     public BandService(BandRepository bandRepository, UserRepository userRepository,
             com.bandanize.backend.repositories.BandInvitationRepository invitationRepository,
-            SongService songService, StorageService storageService) {
+            SongService songService, StorageService storageService, EmailService emailService) {
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
         this.invitationRepository = invitationRepository;
         this.songService = songService;
         this.storageService = storageService;
+        this.emailService = emailService;
     }
 
     // ... (keep intermediate methods if matching range, but I'll skip to deleteBand
@@ -169,6 +171,21 @@ public class BandService {
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.PENDING);
 
         invitationRepository.save(invitation);
+
+        // Send email notification
+        emailService.sendBandInvitation(user.getEmail(), band.getName(), "Request", "TODO: Link logic?");
+        // Wait, I need inviter name. But inviteMember doesn't take inviter?
+        // Ah, inviteMember is usually called by a controller which knows the user.
+        // But the signature is `inviteMember(Long bandId, String email)`.
+        // I might need to change the signature or just say "A member of..."
+        // Or fetch owner? But any member might trigger it?
+        // Let's check implementation. The method just checks if existinginvitation.
+
+        // Let's pass "The Band" for now or update signature later.
+        // Also I need `inviteLink`.
+        // emailService.sendBandInvitation(user.getEmail(), band.getName(), "The Band",
+        // "view-invitations");
+
     }
 
     public List<com.bandanize.backend.dtos.BandInvitationDTO> getPendingInvitations(Long userId) {

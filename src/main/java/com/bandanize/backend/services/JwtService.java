@@ -25,6 +25,15 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateResetToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15)) // 15 minutes
+                .signWith(SECRET_KEY, Jwts.SIG.HS256)
+                .compact();
+    }
+
     public String extractUsername(String token) {
         return Jwts.parser()
                 .verifyWith(SECRET_KEY)
