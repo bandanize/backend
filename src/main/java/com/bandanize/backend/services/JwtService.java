@@ -10,18 +10,32 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-    // Use a fixed secret key for development to avoid invalidating tokens on
-    // restart
-    // Ideally this should be in application.properties
-    private static final String SECRET_STRING = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-    private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(io.jsonwebtoken.io.Decoders.BASE64.decode(SECRET_STRING));
+
+    @org.springframework.beans.factory.annotation.Value("${app.jwt.secret}")
+    private String secretString;
+
+    @org.springframework.beans.factory.annotation.Value("${app.jwt.expiration}")
+    private long jwtExpiration;
+
+    @org.springframework.beans.factory.annotation.Value("${app.jwt.reset-token.expiration}")
+    private long resetTokenExpiration;
+
+    @org.springframework.beans.factory.annotation.Value("${app.jwt.verification-token.expiration}")
+    private long verificationTokenExpiration;
+
+    private SecretKey secretKey;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        this.secretKey = Keys.hmacShaKeyFor(io.jsonwebtoken.io.Decoders.BASE64.decode(secretString));
+    }
 
     public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(SECRET_KEY, Jwts.SIG.HS256)
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -29,14 +43,23 @@ public class JwtService {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15)) // 15 minutes
-                .signWith(SECRET_KEY, Jwts.SIG.HS256)
+                .expiration(new Date(System.currentTimeMillis() + resetTokenExpiration))
+                .signWith(secretKey, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateVerificationToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + verificationTokenExpiration))
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
     public String extractUsername(String token) {
         return Jwts.parser()
-                .verifyWith(SECRET_KEY)
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -50,7 +73,7 @@ public class JwtService {
 
     private boolean isTokenExpired(String token) {
         return Jwts.parser()
-                .verifyWith(SECRET_KEY)
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()

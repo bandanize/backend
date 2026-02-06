@@ -230,6 +230,24 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void verifyUser(String token) {
+        String username = jwtService.extractUsername(token); // Throws if invalid/expired
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!user.isDisabled()) {
+            // Already verified, we can just return silently or throw logic exception
+            return;
+        }
+
+        user.setDisabled(false);
+        userRepository.save(user);
+    }
+
+    public void sendVerificationEmail(UserModel user, String token) {
+        emailService.sendVerificationEmail(user.getEmail(), token);
+    }
+
     /**
      * Converts a UserModel entity to a UserDTO.
      *

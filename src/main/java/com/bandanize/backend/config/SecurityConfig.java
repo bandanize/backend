@@ -64,16 +64,14 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String[] allowedOrigins;
+
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        // Restrict CORS to specific trusted domains
-        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "https://bandanize.com",
-                "https://*.bandanize.com",
-                "https://*.rdvl.net"));
+        // Restrict CORS to specific trusted domains from properties
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(allowedOrigins));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
