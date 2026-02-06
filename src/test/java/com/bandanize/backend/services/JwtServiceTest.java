@@ -19,6 +19,14 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
+        org.springframework.test.util.ReflectionTestUtils.setField(jwtService, "secretString",
+                "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970");
+        org.springframework.test.util.ReflectionTestUtils.setField(jwtService, "jwtExpiration", 36000000L);
+        org.springframework.test.util.ReflectionTestUtils.setField(jwtService, "resetTokenExpiration", 900000L);
+        org.springframework.test.util.ReflectionTestUtils.setField(jwtService, "verificationTokenExpiration",
+                86400000L);
+        jwtService.init();
+
         userDetails = new User("testuser", "password", new ArrayList<>());
     }
 
