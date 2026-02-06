@@ -230,18 +230,24 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void verifyUser(String token) {
         String username = jwtService.extractUsername(token); // Throws if invalid/expired
+        System.out.println("Verifying user: " + username);
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        System.out.println("User found. Current disabled status: " + user.isDisabled());
+
         if (!user.isDisabled()) {
             // Already verified, we can just return silently or throw logic exception
+            System.out.println("User already verified.");
             return;
         }
 
         user.setDisabled(false);
         userRepository.save(user);
+        System.out.println("User enabled and saved.");
     }
 
     public void sendVerificationEmail(UserModel user, String token) {
