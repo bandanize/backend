@@ -26,18 +26,24 @@ public class UserService {
     private final BandInvitationRepository bandInvitationRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final JwtService jwtService;
 
     @Autowired
     public UserService(UserRepository userRepository,
             BandRepository bandRepository,
             BandInvitationRepository bandInvitationRepository,
             ChatMessageRepository chatMessageRepository,
-            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+            EmailService emailService,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.bandRepository = bandRepository;
         this.bandInvitationRepository = bandInvitationRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -201,6 +207,24 @@ public class UserService {
         if (!passwordEncoder.matches(currentPassword, user.getHashedPassword())) {
             throw new org.springframework.security.authentication.BadCredentialsException("Invalid current password");
         }
+
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+    }
+
+    public void processForgotPassword(String email) {
+        UserModel user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        String token = jwtService.generateResetToken(user.getUsername());
+        emailService.sendPasswordReset(user.getEmail(), token);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        String username = jwtService.extractUsername(token); // Throws if invalid/expired
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setHashedPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
