@@ -77,6 +77,10 @@ public class AuthController {
                     .ok(new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getName()));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is disabled. Please verify your email.");
+        } catch (org.springframework.security.authentication.LockedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is locked.");
         }
     }
 
