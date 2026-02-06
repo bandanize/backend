@@ -97,9 +97,29 @@ public class AuthController {
         }
 
         user.setHashedPassword(passwordEncoder.encode(user.getHashedPassword()));
-        user.setDisabled(false); // Enable the user by default
+        user.setDisabled(true); // User is disabled until verification
         userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+
+        // Generate verification token and send email
+        String token = jwtService.generateVerificationToken(user.getUsername());
+        // Simpler: Inject EmailService in AuthController or add method to UserService
+        // Let's use UserService to encapsulate this logic properly
+        userService.sendVerificationEmail(user, token);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("User registered successfully. Please check your email to verify your account.");
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        try {
+            userService.verifyUser(token);
+            return ResponseEntity.ok("Email verified successfully");
+        } catch (io.jsonwebtoken.JwtException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     /**
@@ -133,10 +153,7 @@ public class AuthController {
             userService.processForgotPassword(request.getEmail());
             return ResponseEntity.ok("Password reset email sent");
         } catch (ResourceNotFoundException e) {
-            // Don't reveal if user exists?
-            // For now, let's just return ok or generic message to prevent enumeration,
-            // or return 404 if we want to be helpful to valid users during dev.
-            // Let's return 404 for now as per simple impl.
+            // Return 404 for now as per simple impl.
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }

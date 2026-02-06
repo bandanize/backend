@@ -86,4 +86,33 @@ public class ResendEmailService implements EmailService {
             logger.error("Failed to send band invitation email", e);
         }
     }
+
+    @Override
+    public void sendVerificationEmail(String to, String token) {
+        if (resend == null) {
+            logger.warn("Skipping email send: Resend client not initialized.");
+            return;
+        }
+
+        String verifyLink = frontendUrl + "/verify-email?token=" + token;
+
+        String htmlContent = "<p>Welcome to Bandanize!</p>" +
+                "<p>Please verify your email address to activate your account by clicking the link below:</p>" +
+                "<a href=\"" + verifyLink + "\">Verify Email</a>" +
+                "<p>This link will expire in 24 hours.</p>";
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(fromEmail)
+                .to(to)
+                .subject("Verify your Bandanize account")
+                .html(htmlContent)
+                .build();
+
+        try {
+            CreateEmailResponse data = resend.emails().send(params);
+            logger.info("Verification email sent. ID: " + data.getId());
+        } catch (ResendException e) {
+            logger.error("Failed to send verification email", e);
+        }
+    }
 }

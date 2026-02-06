@@ -34,6 +34,15 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateVerificationToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+                .signWith(SECRET_KEY, Jwts.SIG.HS256)
+                .compact();
+    }
+
     public String extractUsername(String token) {
         return Jwts.parser()
                 .verifyWith(SECRET_KEY)
