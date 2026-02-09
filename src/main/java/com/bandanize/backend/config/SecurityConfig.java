@@ -21,6 +21,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 @org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 public class SecurityConfig {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SecurityConfig.class);
+
     /**
      * Exposes the AuthenticationManager bean.
      */
@@ -70,8 +72,17 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+
+        // Trim and log loaded origins
+        java.util.List<String> origins = java.util.Arrays.stream(allowedOrigins)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+
+        logger.info("CORS Configuration: Loaded allowed origins: {}", origins);
+
         // Restrict CORS to specific trusted domains from properties
-        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(allowedOrigins));
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
