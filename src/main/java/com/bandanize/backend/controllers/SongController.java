@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.bandanize.backend.exceptions.ResourceNotFoundException;
+import com.bandanize.backend.repositories.UserRepository;
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api")
 public class SongController {
@@ -15,11 +19,19 @@ public class SongController {
     @Autowired
     private SongService songService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private Long getCurrentUserId(Principal principal) {
+        return userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found")).getId();
+    }
+
     // --- Song Lists ---
     @PostMapping("/bands/{bandId}/songlists")
     public ResponseEntity<SongListModel> createSongList(@PathVariable Long bandId,
-            @RequestBody SongListModel songList) {
-        return ResponseEntity.ok(songService.createSongList(bandId, songList));
+            @RequestBody SongListModel songList, Principal principal) {
+        return ResponseEntity.ok(songService.createSongList(bandId, getCurrentUserId(principal), songList));
     }
 
     @GetMapping("/bands/{bandId}/songlists")
@@ -46,8 +58,9 @@ public class SongController {
 
     // --- Songs ---
     @PostMapping("/songlists/{listId}/songs")
-    public ResponseEntity<SongModel> addSong(@PathVariable Long listId, @RequestBody SongModel song) {
-        return ResponseEntity.ok(songService.addSong(listId, song));
+    public ResponseEntity<SongModel> addSong(@PathVariable Long listId, @RequestBody SongModel song,
+            Principal principal) {
+        return ResponseEntity.ok(songService.addSong(listId, getCurrentUserId(principal), song));
     }
 
     @PutMapping("/songs/{songId}")

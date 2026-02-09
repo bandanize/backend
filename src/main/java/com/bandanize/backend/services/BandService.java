@@ -27,30 +27,26 @@ public class BandService {
     private final EmailService emailService;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     public BandService(BandRepository bandRepository, UserRepository userRepository,
             com.bandanize.backend.repositories.BandInvitationRepository invitationRepository,
-            SongService songService, StorageService storageService, EmailService emailService) {
+            SongService songService, StorageService storageService, EmailService emailService,
+            NotificationService notificationService) {
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
         this.invitationRepository = invitationRepository;
         this.songService = songService;
         this.storageService = storageService;
         this.emailService = emailService;
+        this.notificationService = notificationService;
     }
 
-    // ... (keep intermediate methods if matching range, but I'll skip to deleteBand
-    // if possible or just replace the updated blocks)
-    // Wait, the replaced block includes the constructor, so I must match that.
-
-    // I can't replace huge blocks with scattered changes easily.
-    // I will use replace_file_content on specific chunks.
-
-    // Chunk 1: Constructor fields
-    // Chunk 2: deleteBand method
+    // ... (rest of methods)
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<BandDTO> getAllBands() {
-
         return bandRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -225,6 +221,9 @@ public class BandService {
 
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.ACCEPTED);
         invitationRepository.save(invitation);
+
+        // Notify
+        notificationService.createMemberAddedNotification(band, user, null);
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -397,7 +396,8 @@ public class BandService {
                         user.getId(),
                         user.getUsername(),
                         user.getName(),
-                        user.getEmail()))
+                        user.getEmail(),
+                        user.getPhoto()))
                 .collect(Collectors.toList()));
         bandDTO.setSongLists(band.getSongLists());
         bandDTO.setChatMessages(band.getChatMessages());

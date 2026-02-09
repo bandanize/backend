@@ -21,6 +21,8 @@ public class ChatService {
     private BandRepository bandRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private NotificationService notificationService;
 
     public List<ChatMessageModel> getChatHistory(Long bandId) {
         return chatMessageRepository.findByBandIdOrderByTimestampAsc(bandId);
@@ -29,15 +31,28 @@ public class ChatService {
     public ChatMessageModel sendMessage(Long bandId, Long userId, String message) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
-        UserModel user = userRepository.findById(userId)
+        UserModel sender = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         ChatMessageModel chatMessage = new ChatMessageModel();
         chatMessage.setBand(band);
-        chatMessage.setSender(user);
+        chatMessage.setSender(sender);
         chatMessage.setMessage(message);
         chatMessage.setTimestamp(LocalDateTime.now());
 
-        return chatMessageRepository.save(chatMessage);
+        ChatMessageModel savedMessage = chatMessageRepository.save(chatMessage);
+
+        // Check for mentions (Simple implementation: @Name)
+        if (message.contains("@")) {
+            // Very basic: iterate over band members and check if their name is in the
+            // message
+            for (UserModel member : band.getUsers()) {
+                if (!member.getId().equals(sender.getId()) && message.contains("@" + member.getName())) {
+                    notificationService.createChatMentionNotification(band, sender, member);
+                }
+            }
+        }
+
+        return savedMessage;
     }
 }

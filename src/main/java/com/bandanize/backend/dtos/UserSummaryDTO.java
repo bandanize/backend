@@ -5,12 +5,14 @@ public class UserSummaryDTO {
     private String username;
     private String name;
     private String email;
+    private String photo;
 
-    public UserSummaryDTO(Long id, String username, String name, String email) {
+    public UserSummaryDTO(Long id, String username, String name, String email, String photo) {
         this.id = id;
         this.username = username;
         this.name = name;
         this.email = email;
+        this.photo = photo;
     }
 
     // Getters
@@ -45,5 +47,13 @@ public class UserSummaryDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 }

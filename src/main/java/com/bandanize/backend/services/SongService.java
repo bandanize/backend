@@ -18,13 +18,23 @@ public class SongService {
     private TablatureRepository tablatureRepository;
     @Autowired
     private BandRepository bandRepository;
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private UserRepository userRepository;
 
     // --- SongList ---
-    public SongListModel createSongList(Long bandId, SongListModel songList) {
+    public SongListModel createSongList(Long bandId, Long userId, SongListModel songList) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         songList.setBand(band);
-        return songListRepository.save(songList);
+        SongListModel savedList = songListRepository.save(songList);
+
+        notificationService.createListNotification(band, user, savedList);
+        return savedList;
     }
 
     public List<SongListModel> getSongListsByBand(Long bandId) {
@@ -53,10 +63,15 @@ public class SongService {
         songListRepository.delete(list);
     }
 
+    // ...
+
     // --- Song ---
-    public SongModel addSong(Long listId, SongModel song) {
+    public SongModel addSong(Long listId, Long userId, SongModel song) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         song.setSongList(list);
 
         // Set default order index to current size (append to end)
@@ -64,7 +79,9 @@ public class SongService {
             song.setOrderIndex(list.getSongs().size());
         }
 
-        return songRepository.save(song);
+        SongModel savedSong = songRepository.save(song);
+        notificationService.createSongNotification(list.getBand(), user, savedSong);
+        return savedSong;
     }
 
     @org.springframework.transaction.annotation.Transactional
