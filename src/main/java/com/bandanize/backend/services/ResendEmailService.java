@@ -3,7 +3,7 @@ package com.bandanize.backend.services;
 import com.resend.Resend;
 import com.resend.services.emails.model.CreateEmailOptions;
 import com.resend.services.emails.model.CreateEmailResponse;
-import com.resend.core.exception.ResendException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,7 +55,7 @@ public class ResendEmailService implements EmailService {
         try {
             CreateEmailResponse data = resend.emails().send(params);
             logger.info("Password reset email sent. ID: " + data.getId());
-        } catch (ResendException e) {
+        } catch (Exception e) {
             logger.error("Failed to send password reset email", e);
         }
     }
@@ -82,7 +82,7 @@ public class ResendEmailService implements EmailService {
         try {
             CreateEmailResponse data = resend.emails().send(params);
             logger.info("Band invitation email sent. ID: " + data.getId());
-        } catch (ResendException e) {
+        } catch (Exception e) {
             logger.error("Failed to send band invitation email", e);
         }
     }
@@ -111,7 +111,7 @@ public class ResendEmailService implements EmailService {
         try {
             CreateEmailResponse data = resend.emails().send(params);
             logger.info("Verification email sent. ID: " + data.getId());
-        } catch (ResendException e) {
+        } catch (Exception e) {
             logger.error("Failed to send verification email", e);
         }
     }
