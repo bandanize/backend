@@ -14,5 +14,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageModel, L
 
     ChatMessageModel findTopByBandIdOrderByTimestampDesc(Long bandId);
 
-    void deleteByBandId(Long bandId);
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ChatMessageModel c WHERE c.band.id = :bandId")
+    void deleteByBandId(@org.springframework.data.repository.query.Param("bandId") Long bandId);
 }

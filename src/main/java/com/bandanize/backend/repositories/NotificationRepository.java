@@ -18,5 +18,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void markAllAsRead(@org.springframework.data.repository.query.Param("bandId") Long bandId,
             @org.springframework.data.repository.query.Param("recipientId") Long recipientId);
 
-    void deleteByBandId(Long bandId);
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Notification n WHERE n.band.id = :bandId")
+    void deleteByBandId(@org.springframework.data.repository.query.Param("bandId") Long bandId);
 }
