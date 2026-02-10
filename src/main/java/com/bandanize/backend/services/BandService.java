@@ -22,6 +22,10 @@ public class BandService {
     private final BandRepository bandRepository;
     private final UserRepository userRepository;
     private final com.bandanize.backend.repositories.BandInvitationRepository invitationRepository;
+    private final com.bandanize.backend.repositories.ChatMessageRepository chatMessageRepository;
+    private final com.bandanize.backend.repositories.EventRepository eventRepository;
+    private final com.bandanize.backend.repositories.NotificationRepository notificationRepository;
+    private final com.bandanize.backend.repositories.ChatReadStatusRepository chatReadStatusRepository;
     private final SongService songService;
     private final StorageService storageService;
     private final EmailService emailService;
@@ -32,11 +36,19 @@ public class BandService {
     @Autowired
     public BandService(BandRepository bandRepository, UserRepository userRepository,
             com.bandanize.backend.repositories.BandInvitationRepository invitationRepository,
+            com.bandanize.backend.repositories.ChatMessageRepository chatMessageRepository,
+            com.bandanize.backend.repositories.EventRepository eventRepository,
+            com.bandanize.backend.repositories.NotificationRepository notificationRepository,
+            com.bandanize.backend.repositories.ChatReadStatusRepository chatReadStatusRepository,
             SongService songService, StorageService storageService, EmailService emailService,
             NotificationService notificationService) {
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
         this.invitationRepository = invitationRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.eventRepository = eventRepository;
+        this.notificationRepository = notificationRepository;
+        this.chatReadStatusRepository = chatReadStatusRepository;
         this.songService = songService;
         this.storageService = storageService;
         this.emailService = emailService;
@@ -364,6 +376,13 @@ public class BandService {
         // CRITICAL: Clear the list from the parent entity to prevent Hibernate from
         // trying to MERGE deleted entities when we save the band later (to clear users)
         band.getSongLists().clear();
+
+        // Manual cleanup of related entities to avoid foreign key violations
+        invitationRepository.deleteByBandId(bandId);
+        notificationRepository.deleteByBandId(bandId);
+        eventRepository.deleteByBandId(bandId);
+        chatReadStatusRepository.deleteByBandId(bandId);
+        chatMessageRepository.deleteByBandId(bandId); // Though cascade exists, manual is safer
 
         // Clear associations
         // This removes the band from the join table for all users

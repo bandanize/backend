@@ -13,4 +13,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageModel, L
     List<ChatMessageModel> findBySender(com.bandanize.backend.models.UserModel sender);
 
     ChatMessageModel findTopByBandIdOrderByTimestampDesc(Long bandId);
+
+    void deleteByBandId(Long bandId);
 }
