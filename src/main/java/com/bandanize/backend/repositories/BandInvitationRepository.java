@@ -16,5 +16,8 @@ public interface BandInvitationRepository extends JpaRepository<BandInvitationMo
 
     void deleteByInvitedUser(com.bandanize.backend.models.UserModel invitedUser);
 
-    void deleteByBandId(Long bandId);
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM BandInvitationModel b WHERE b.band.id = :bandId")
+    void deleteByBandId(@org.springframework.data.repository.query.Param("bandId") Long bandId);
 }

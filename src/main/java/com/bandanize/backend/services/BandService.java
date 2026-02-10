@@ -363,36 +363,26 @@ public class BandService {
         }
 
         // Clear song lists explicitly to trigger file cleanup
-        // We use a copy of the list to avoid concurrent modification during iteration
-        // if we were removing,
-        // but here we call deleteSongList which deletes from DB.
-        // We need to fetch lists or use the existing ones.
-        // Note: deleteSongList deletes from Repo.
         List<Long> listIds = band.getSongLists().stream().map(com.bandanize.backend.models.SongListModel::getId)
                 .collect(Collectors.toList());
         for (Long listId : listIds) {
             songService.deleteSongList(listId);
         }
-        // CRITICAL: Clear the list from the parent entity to prevent Hibernate from
-        // trying to MERGE deleted entities when we save the band later (to clear users)
         band.getSongLists().clear();
 
+        // Clear associations and FLUSH to ensure many-to-many join table is clean
+        band.getUsers().clear();
+        bandRepository.saveAndFlush(band);
+
         // Manual cleanup of related entities to avoid foreign key violations
+        // We do this AFTER flushing associations to ensure no stale state re-links them
         invitationRepository.deleteByBandId(bandId);
         notificationRepository.deleteByBandId(bandId);
         eventRepository.deleteByBandId(bandId);
         chatReadStatusRepository.deleteByBandId(bandId);
-        chatMessageRepository.deleteByBandId(bandId); // Though cascade exists, manual is safer
+        chatMessageRepository.deleteByBandId(bandId);
 
-        // Clear associations
-        // This removes the band from the join table for all users
-        band.getUsers().clear();
-        bandRepository.save(band);
-
-        // Reload band to ensure lists are detached? Or just delete.
-        // Since we deleted lists explicitly, we should be fine.
-
-        // Delete the band
+        // Finally delete the band
         bandRepository.delete(band);
     }
 
