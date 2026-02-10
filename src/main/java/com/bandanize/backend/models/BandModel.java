@@ -41,9 +41,25 @@ public class BandModel {
     @com.fasterxml.jackson.annotation.JsonManagedReference
     private List<SongListModel> songLists = new ArrayList<>();
 
-    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<ChatMessageModel> chatMessages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<BandInvitationModel> invitations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<EventModel> events = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<ChatReadStatus> chatReadStatuses = new ArrayList<>();
 
     // Getters y setters
     public Long getId() {
@@ -132,5 +148,37 @@ public class BandModel {
 
     public void setOwner(UserModel owner) {
         this.owner = owner;
+    }
+
+    public List<BandInvitationModel> getInvitations() {
+        return invitations;
+    }
+
+    public void setInvitations(List<BandInvitationModel> invitations) {
+        this.invitations = invitations;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public List<EventModel> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<EventModel> events) {
+        this.events = events;
+    }
+
+    public List<ChatReadStatus> getChatReadStatuses() {
+        return chatReadStatuses;
+    }
+
+    public void setChatReadStatuses(List<ChatReadStatus> chatReadStatuses) {
+        this.chatReadStatuses = chatReadStatuses;
     }
 }
