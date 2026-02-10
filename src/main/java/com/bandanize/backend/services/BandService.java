@@ -140,6 +140,23 @@ public class BandService {
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
+        executeInvitation(band, user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void inviteMemberById(Long bandId, Long userId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        UserModel user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        executeInvitation(band, user);
+    }
+
+    private void executeInvitation(BandModel band, UserModel user) {
+        Long bandId = band.getId();
+
         if (band.getUsers().contains(user)) {
             throw new IllegalArgumentException("User is already a member");
         }
