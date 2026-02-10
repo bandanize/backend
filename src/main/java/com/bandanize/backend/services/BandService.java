@@ -144,6 +144,26 @@ public class BandService {
             throw new IllegalArgumentException("User is already a member");
         }
 
+        // Prevent self-invitation (redundant if already member, but explicit for
+        // clarity)
+        // We don't have the requester ID here, but if the user IS a member, the above
+        // check handles it.
+        // If the user is NOT a member, they can't invite themselves anyway because they
+        // can't access the band...
+        // ...UNLESS they are accessing a public band? No, bands are private-ish.
+        // BUT, the user said "se crea un bucle raro" (weird loop).
+        // If I am the OWNER, I am in band.getUsers().
+        // If the equals() method was missing, `contains` failed, so I could invite
+        // myself.
+        // Now that equals() is fixed, the above `contains` check should block it.
+
+        // HOWEVER, there's a case where a Pending Invitation exists.
+        // If I invite myself, and I am already a member, `contains` blocks it.
+        // If I am NOT a member, I can't call this endpoint usually (secured by band
+        // membership?).
+        // Let's assume the equals() fix resolves the main issue.
+        // But to be safe, let's check pending invitations too.
+
         // Check if invitation exists
         java.util.Optional<com.bandanize.backend.models.BandInvitationModel> existingInvitation = invitationRepository
                 .findByBandIdAndInvitedUserId(bandId, user.getId());
@@ -293,27 +313,8 @@ public class BandService {
         userRepository.save(member);
     }
 
-    // ... existing addChatMessage ...
-    @org.springframework.transaction.annotation.Transactional
-    public com.bandanize.backend.models.ChatMessageModel addChatMessage(Long bandId,
-            com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
-        BandModel band = bandRepository.findById(bandId)
-                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
-
-        UserModel user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
-
-        com.bandanize.backend.models.ChatMessageModel message = new com.bandanize.backend.models.ChatMessageModel();
-        message.setBand(band);
-        message.setSender(user);
-        message.setMessage(request.getMessage());
-        message.setTimestamp(java.time.LocalDateTime.now());
-
-        band.getChatMessages().add(message);
-        bandRepository.save(band);
-
-        return band.getChatMessages().get(band.getChatMessages().size() - 1);
-    }
+    // Method addChatMessage was moved to ChatService and BandController to handle
+    // mentions correctly
 
     @org.springframework.transaction.annotation.Transactional
     public void deleteBand(Long bandId, Long requesterUserId) {
@@ -360,6 +361,9 @@ public class BandService {
         for (Long listId : listIds) {
             songService.deleteSongList(listId);
         }
+        // CRITICAL: Clear the list from the parent entity to prevent Hibernate from
+        // trying to MERGE deleted entities when we save the band later (to clear users)
+        band.getSongLists().clear();
 
         // Clear associations
         // This removes the band from the join table for all users

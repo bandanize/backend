@@ -73,10 +73,19 @@ public class NotificationService {
     }
 
     public void createChatMentionNotification(BandModel band, UserModel actor, UserModel mentionedUser) {
-        createNotification(band, actor, Notification.NotificationType.CHAT_MENTION,
-                Map.of("targetUserName", mentionedUser.getName()),
-                "New Mention",
-                actor.getName() + " mentioned you");
+        // We only notify the mentioned user
+        Notification notification = new Notification();
+        notification.setBand(band);
+        notification.setActor(actor);
+        notification.setRecipient(mentionedUser);
+        notification.setType(Notification.NotificationType.CHAT_MENTION);
+        notification.setMetadata(Map.of("targetUserName", mentionedUser.getName()));
+        notification.setTitle("New Mention");
+        notification.setMessage(actor.getName() + " te mencionó");
+        // Use a simpler timestamp or let DB handle it
+        // notification.setCreatedAt(LocalDateTime.now());
+
+        notificationRepository.save(notification);
     }
 
     public void createEventNotification(BandModel band, UserModel actor, EventModel event, boolean isModification) {
@@ -121,5 +130,13 @@ public class NotificationService {
 
             notificationRepository.save(notification);
         }
+    }
+
+    public long getUnreadCount(Long bandId, Long recipientId) {
+        return notificationRepository.countByBandIdAndRecipientIdAndIsReadFalse(bandId, recipientId);
+    }
+
+    public void markAllAsRead(Long bandId, Long recipientId) {
+        notificationRepository.markAllAsRead(bandId, recipientId);
     }
 }

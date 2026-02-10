@@ -5,6 +5,7 @@ import com.bandanize.backend.exceptions.ErrorResponse;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.BandModel;
 import com.bandanize.backend.services.BandService;
+import com.bandanize.backend.services.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +26,14 @@ public class BandController {
 
     private final BandService bandService;
     private final com.bandanize.backend.services.UserService userService;
+    private final ChatService chatService;
 
     @Autowired
-    public BandController(BandService bandService, com.bandanize.backend.services.UserService userService) {
+    public BandController(BandService bandService, com.bandanize.backend.services.UserService userService,
+            ChatService chatService) {
         this.bandService = bandService;
         this.userService = userService;
+        this.chatService = chatService;
     }
 
     /**
@@ -178,8 +182,39 @@ public class BandController {
     @PostMapping("/{bandId}/chat")
     public ResponseEntity<com.bandanize.backend.models.ChatMessageModel> addChatMessage(@PathVariable Long bandId,
             @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
-        com.bandanize.backend.models.ChatMessageModel savedMessage = bandService.addChatMessage(bandId, request);
+        com.bandanize.backend.models.ChatMessageModel savedMessage = chatService.sendMessage(bandId,
+                request.getUserId(), request.getMessage());
         return ResponseEntity.ok(savedMessage);
+    }
+
+    /**
+     * Checks if the user has unread messages in the band chat.
+     *
+     * @param bandId      The ID of the band.
+     * @param userDetails The authenticated user.
+     * @return ResponseEntity with boolean status.
+     */
+    @GetMapping("/{bandId}/chat/unread")
+    public ResponseEntity<Boolean> getUnreadChatStatus(@PathVariable Long bandId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        boolean hasUnread = chatService.hasUnreadMessages(bandId, user.getId());
+        return ResponseEntity.ok(hasUnread);
+    }
+
+    /**
+     * Marks all messages in the band chat as read for the user.
+     *
+     * @param bandId      The ID of the band.
+     * @param userDetails The authenticated user.
+     * @return ResponseEntity with success message.
+     */
+    @PostMapping("/{bandId}/chat/read")
+    public ResponseEntity<String> markChatAsRead(@PathVariable Long bandId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        chatService.markAsRead(bandId, user.getId());
+        return ResponseEntity.ok("Chat marked as read");
     }
 
     /**

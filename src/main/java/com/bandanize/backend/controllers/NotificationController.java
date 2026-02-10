@@ -22,4 +22,18 @@ public class NotificationController {
         com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
         return notificationService.getProjectNotifications(projectId, user.getId());
     }
+
+    @GetMapping("/unread-count")
+    public long getUnreadCount(@PathVariable Long projectId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        return notificationService.getUnreadCount(projectId, user.getId());
+    }
+
+    @PostMapping("/mark-read")
+    public void markAllAsRead(@PathVariable Long projectId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        notificationService.markAllAsRead(projectId, user.getId());
+    }
 }
