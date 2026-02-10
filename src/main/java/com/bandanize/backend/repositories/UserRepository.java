@@ -19,6 +19,6 @@ public interface UserRepository extends JpaRepository<UserModel, Long> {
 
     List<UserModel> findByUsernameContaining(String username);
 
-    @Query("SELECT u FROM UserModel u WHERE (LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND u.disabled = false")
+    @Query("SELECT u FROM UserModel u WHERE (LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND u.disabled = false")
     List<UserModel> searchUsers(@Param("query") String query);
 }

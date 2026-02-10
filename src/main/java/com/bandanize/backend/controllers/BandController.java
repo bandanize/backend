@@ -117,10 +117,15 @@ public class BandController {
     @PostMapping("/{bandId}/invite")
     public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
         String email = body.get("email");
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email is required");
+        String userIdStr = body.get("userId");
+
+        if (userIdStr != null && !userIdStr.trim().isEmpty()) {
+            bandService.inviteMemberById(bandId, Long.parseLong(userIdStr));
+        } else if (email != null && !email.trim().isEmpty()) {
+            bandService.inviteMember(bandId, email);
+        } else {
+            throw new IllegalArgumentException("Email or User ID is required");
         }
-        bandService.inviteMember(bandId, email);
         return ResponseEntity.ok("Invitation sent successfully");
     }
 
