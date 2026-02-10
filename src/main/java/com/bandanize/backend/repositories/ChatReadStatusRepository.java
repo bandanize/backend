@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ChatReadStatusRepository extends JpaRepository<ChatReadStatus, Long> {
     Optional<ChatReadStatus> findByBandIdAndUserId(Long bandId, Long userId);
+
+    void deleteByBandId(Long bandId);
 }
