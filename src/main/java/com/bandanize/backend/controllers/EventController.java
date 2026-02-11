@@ -1,5 +1,6 @@
 package com.bandanize.backend.controllers;
 
+import com.bandanize.backend.dtos.EventDTO;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.EventModel;
 import com.bandanize.backend.repositories.UserRepository;
@@ -27,20 +28,26 @@ public class EventController {
     }
 
     @GetMapping("/bands/{bandId}/events")
-    public ResponseEntity<List<EventModel>> getEvents(@PathVariable Long bandId) {
-        return ResponseEntity.ok(eventService.getEventsByBand(bandId));
+    public ResponseEntity<List<EventDTO>> getEvents(@PathVariable Long bandId) {
+        List<EventDTO> dtos = eventService.getEventsByBand(bandId)
+                .stream()
+                .map(EventDTO::fromModel)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @PostMapping("/bands/{bandId}/events")
-    public ResponseEntity<EventModel> createEvent(@PathVariable Long bandId, @RequestBody EventModel event,
+    public ResponseEntity<EventDTO> createEvent(@PathVariable Long bandId, @RequestBody EventModel event,
             Principal principal) {
-        return ResponseEntity.ok(eventService.createEvent(bandId, getCurrentUserId(principal), event));
+        EventModel created = eventService.createEvent(bandId, getCurrentUserId(principal), event);
+        return ResponseEntity.ok(EventDTO.fromModel(created));
     }
 
     @PutMapping("/events/{eventId}")
-    public ResponseEntity<EventModel> updateEvent(@PathVariable Long eventId, @RequestBody EventModel event,
+    public ResponseEntity<EventDTO> updateEvent(@PathVariable Long eventId, @RequestBody EventModel event,
             Principal principal) {
-        return ResponseEntity.ok(eventService.updateEvent(eventId, getCurrentUserId(principal), event));
+        EventModel updated = eventService.updateEvent(eventId, getCurrentUserId(principal), event);
+        return ResponseEntity.ok(EventDTO.fromModel(updated));
     }
 
     @DeleteMapping("/events/{eventId}")

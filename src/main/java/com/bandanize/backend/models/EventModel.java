@@ -19,6 +19,11 @@ public class EventModel {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column(nullable = false)
+    private String type = "OTRO"; // CONCIERTO, ENSAYO, OTRO
+
+    private String location;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "band_id", nullable = false)
     private BandModel band;
@@ -64,6 +69,22 @@ public class EventModel {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public BandModel getBand() {
