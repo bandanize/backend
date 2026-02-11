@@ -19,7 +19,7 @@ public class EventModel {
     @Column(nullable = false)
     private LocalDateTime date;
 
-    @Column(nullable = false)
+    @Column(name = "event_type", nullable = false)
     private String type = "OTRO"; // CONCIERTO, ENSAYO, OTRO
 
     private String location;
