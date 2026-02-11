@@ -133,28 +133,28 @@ public class BandService {
      * @param email  The email of the user to invite.
      */
     @org.springframework.transaction.annotation.Transactional
-    public void inviteMember(Long bandId, String email) {
+    public void inviteMember(Long bandId, String email, String inviterName) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-        executeInvitation(band, user);
+        executeInvitation(band, user, inviterName);
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public void inviteMemberById(Long bandId, Long userId) {
+    public void inviteMemberById(Long bandId, Long userId, String inviterName) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        executeInvitation(band, user);
+        executeInvitation(band, user, inviterName);
     }
 
-    private void executeInvitation(BandModel band, UserModel user) {
+    private void executeInvitation(BandModel band, UserModel user, String inviterName) {
         Long bandId = band.getId();
 
         if (band.getUsers().contains(user)) {
@@ -206,7 +206,7 @@ public class BandService {
         invitationRepository.save(invitation);
 
         // Send email notification
-        emailService.sendBandInvitation(user.getEmail(), band.getName(), "Request", "TODO: Link logic?");
+        emailService.sendBandInvitation(user.getEmail(), band.getName(), inviterName, "view-invitations");
         // Wait, I need inviter name. But inviteMember doesn't take inviter?
         // Ah, inviteMember is usually called by a controller which knows the user.
         // But the signature is `inviteMember(Long bandId, String email)`.

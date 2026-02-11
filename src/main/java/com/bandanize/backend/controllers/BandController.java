@@ -115,14 +115,28 @@ public class BandController {
      * @return ResponseEntity with success message.
      */
     @PostMapping("/{bandId}/invite")
-    public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         String email = body.get("email");
         String userIdStr = body.get("userId");
+        String inviterName = userDetails != null ? userDetails.getUsername() : "Un miembro";
+
+        // Try to get a better name if possible
+        if (userDetails != null) {
+            try {
+                com.bandanize.backend.dtos.UserDTO requester = userService.getUserByUsername(userDetails.getUsername());
+                if (requester.getName() != null && !requester.getName().isEmpty()) {
+                    inviterName = requester.getName();
+                }
+            } catch (Exception e) {
+                // Fallback to username
+            }
+        }
 
         if (userIdStr != null && !userIdStr.trim().isEmpty()) {
-            bandService.inviteMemberById(bandId, Long.parseLong(userIdStr));
+            bandService.inviteMemberById(bandId, Long.parseLong(userIdStr), inviterName);
         } else if (email != null && !email.trim().isEmpty()) {
-            bandService.inviteMember(bandId, email);
+            bandService.inviteMember(bandId, email, inviterName);
         } else {
             throw new IllegalArgumentException("Email or User ID is required");
         }
