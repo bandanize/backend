@@ -13,6 +13,7 @@ public class SongListModel {
     private Long id;
 
     private String name;
+    private Integer orderIndex;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "band_id")
@@ -38,6 +39,14 @@ public class SongListModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getOrderIndex() {
+        return orderIndex;
+    }
+
+    public void setOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
     }
 
     public BandModel getBand() {

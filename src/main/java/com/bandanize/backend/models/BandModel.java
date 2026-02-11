@@ -38,6 +38,7 @@ public class BandModel {
     private List<UserModel> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
     @com.fasterxml.jackson.annotation.JsonManagedReference
     private List<SongListModel> songLists = new ArrayList<>();
 

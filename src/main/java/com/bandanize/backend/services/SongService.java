@@ -31,6 +31,12 @@ public class SongService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         songList.setBand(band);
+
+        // Set default order index to current size (append to end)
+        if (songList.getOrderIndex() == null) {
+            songList.setOrderIndex(band.getSongLists().size());
+        }
+
         SongListModel savedList = songListRepository.save(songList);
 
         notificationService.createListNotification(band, user, savedList);
@@ -149,6 +155,23 @@ public class SongService {
         }
 
         songListRepository.save(list);
+    }
+
+    public void reorderSongLists(Long bandId, List<Long> listIds) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+
+        List<SongListModel> lists = band.getSongLists();
+        for (int i = 0; i < listIds.size(); i++) {
+            Long listId = listIds.get(i);
+            for (SongListModel list : lists) {
+                if (list.getId().equals(listId)) {
+                    list.setOrderIndex(i);
+                    break;
+                }
+            }
+        }
+        bandRepository.save(band);
     }
 
     private void cleanupSongFiles(SongModel song) {
