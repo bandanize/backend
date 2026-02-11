@@ -31,6 +31,7 @@ public class EventService {
         return eventRepository.findByBandIdOrderByDateAsc(bandId);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public EventModel createEvent(Long bandId, Long userId, EventModel eventDetails) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
@@ -48,6 +49,7 @@ public class EventService {
         return savedEvent;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public EventModel updateEvent(Long eventId, Long userId, EventModel eventDetails) {
         EventModel event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -74,6 +76,7 @@ public class EventService {
         return updatedEvent;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteEvent(Long eventId) {
         EventModel event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));

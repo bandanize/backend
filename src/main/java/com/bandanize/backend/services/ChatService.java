@@ -30,6 +30,7 @@ public class ChatService {
         return chatMessageRepository.findByBandIdOrderByTimestampAsc(bandId);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public ChatMessageModel sendMessage(Long bandId, Long userId, String message) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
@@ -96,7 +97,7 @@ public class ChatService {
 
         // If latest message is from the user themselves, it's not "unread" in the sense
         // of notification needed
-        if (latestMessage.getSender().getId().equals(userId)) {
+        if (latestMessage.getSender() != null && latestMessage.getSender().getId().equals(userId)) {
             return false;
         }
 

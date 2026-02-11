@@ -3,6 +3,8 @@ package com.bandanize.backend.services;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.*;
 import com.bandanize.backend.repositories.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,9 @@ import java.util.List;
 
 @Service
 public class SongService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SongService.class);
+
     @Autowired
     private SongListRepository songListRepository;
     @Autowired
@@ -212,7 +217,7 @@ public class SongService {
         if (details.getFiles() != null) {
             tab.setFiles(details.getFiles());
         }
-        System.out.println("Saving tab update to DB...");
+        logger.debug("Saving tab update to DB for tabId: {}", tabId);
         return tablatureRepository.saveAndFlush(tab);
     }
 

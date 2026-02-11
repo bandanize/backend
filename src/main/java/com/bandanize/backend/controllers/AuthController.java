@@ -63,12 +63,18 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+        if (authRequest.getUsername() == null || authRequest.getUsername().isBlank()
+                || authRequest.getPassword() == null || authRequest.getPassword().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username and password are required");
+        }
+
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername().trim(),
+                            authRequest.getPassword()));
 
-            final UserModel user = userRepository.findByUsername(authRequest.getUsername())
-                    .or(() -> userRepository.findByEmail(authRequest.getUsername()))
+            final UserModel user = userRepository.findByUsername(authRequest.getUsername().trim())
+                    .or(() -> userRepository.findByEmail(authRequest.getUsername().trim()))
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             String token = jwtService.generateToken(user.getUsername());
@@ -92,6 +98,22 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserModel user) {
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username is required");
+        }
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is required");
+        }
+        if (user.getHashedPassword() == null || user.getHashedPassword().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password is required");
+        }
+        if (!user.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+        }
+
+        user.setUsername(user.getUsername().trim());
+        user.setEmail(user.getEmail().trim());
+
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
@@ -101,13 +123,10 @@ public class AuthController {
         }
 
         user.setHashedPassword(passwordEncoder.encode(user.getHashedPassword()));
-        user.setDisabled(true); // User is disabled until verification
+        user.setDisabled(true);
         userRepository.save(user);
 
-        // Generate verification token and send email
         String token = jwtService.generateVerificationToken(user.getUsername());
-        // Simpler: Inject EmailService in AuthController or add method to UserService
-        // Let's use UserService to encapsulate this logic properly
         userService.sendVerificationEmail(user, token);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -153,21 +172,31 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is required");
+        }
+
         try {
-            userService.processForgotPassword(request.getEmail());
+            userService.processForgotPassword(request.getEmail().trim());
             return ResponseEntity.ok("Password reset email sent");
         } catch (ResourceNotFoundException e) {
-            // Return 404 for now as per simple impl.
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        if (request.getToken() == null || request.getToken().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token is required");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("New password is required");
+        }
+
         try {
-            userService.resetPassword(request.getToken(), request.getNewPassword());
+            userService.resetPassword(request.getToken().trim(), request.getNewPassword());
             return ResponseEntity.ok("Password reset successfully");
-        } catch (io.jsonwebtoken.JwtException e) { // Catch JWT errors (expired, invalid)
+        } catch (io.jsonwebtoken.JwtException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token");
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

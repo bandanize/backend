@@ -2,6 +2,7 @@ package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.services.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +32,10 @@ public class NotificationController {
     }
 
     @PostMapping("/mark-read")
-    public void markAllAsRead(@PathVariable Long projectId,
+    public ResponseEntity<Void> markAllAsRead(@PathVariable Long projectId,
             @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
         notificationService.markAllAsRead(projectId, user.getId());
+        return ResponseEntity.ok().build();
     }
 }

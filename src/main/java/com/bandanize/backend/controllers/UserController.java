@@ -1,8 +1,6 @@
 package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.dtos.UserDTO;
-import com.bandanize.backend.exceptions.ErrorResponse;
-import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,17 +117,5 @@ public class UserController {
 
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Handles ResourceNotFoundException.
-     *
-     * @param ex The exception.
-     * @return ResponseEntity with error details.
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), "Resource not found");
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 }
