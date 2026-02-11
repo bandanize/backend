@@ -61,6 +61,10 @@ public class EventService {
             event.setDescription(eventDetails.getDescription());
         if (eventDetails.getDate() != null)
             event.setDate(eventDetails.getDate());
+        if (eventDetails.getType() != null)
+            event.setType(eventDetails.getType());
+        if (eventDetails.getLocation() != null)
+            event.setLocation(eventDetails.getLocation());
 
         EventModel updatedEvent = eventRepository.save(event);
 
