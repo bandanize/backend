@@ -6,6 +6,8 @@ import com.bandanize.backend.models.BandModel;
 import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.repositories.BandRepository;
 import com.bandanize.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class BandService {
+
+    private static final Logger logger = LoggerFactory.getLogger(BandService.class);
 
     private final BandRepository bandRepository;
     private final UserRepository userRepository;
@@ -161,34 +165,13 @@ public class BandService {
             throw new IllegalArgumentException("User is already a member");
         }
 
-        // Prevent self-invitation (redundant if already member, but explicit for
-        // clarity)
-        // We don't have the requester ID here, but if the user IS a member, the above
-        // check handles it.
-        // If the user is NOT a member, they can't invite themselves anyway because they
-        // can't access the band...
-        // ...UNLESS they are accessing a public band? No, bands are private-ish.
-        // BUT, the user said "se crea un bucle raro" (weird loop).
-        // If I am the OWNER, I am in band.getUsers().
-        // If the equals() method was missing, `contains` failed, so I could invite
-        // myself.
-        // Now that equals() is fixed, the above `contains` check should block it.
-
-        // HOWEVER, there's a case where a Pending Invitation exists.
-        // If I invite myself, and I am already a member, `contains` blocks it.
-        // If I am NOT a member, I can't call this endpoint usually (secured by band
-        // membership?).
-        // Let's assume the equals() fix resolves the main issue.
-        // But to be safe, let's check pending invitations too.
-
-        // Check if invitation exists
+        // Check if invitation already exists
         java.util.Optional<com.bandanize.backend.models.BandInvitationModel> existingInvitation = invitationRepository
                 .findByBandIdAndInvitedUserId(bandId, user.getId());
 
         if (existingInvitation.isPresent()) {
             com.bandanize.backend.models.BandInvitationModel invitation = existingInvitation.get();
             if (invitation.getStatus() == com.bandanize.backend.models.InvitationStatus.PENDING) {
-                // Already pending
                 return;
             } else {
                 // Reactivate invitation
@@ -207,18 +190,6 @@ public class BandService {
 
         // Send email notification
         emailService.sendBandInvitation(user.getEmail(), band.getName(), inviterName, "view-invitations");
-        // Wait, I need inviter name. But inviteMember doesn't take inviter?
-        // Ah, inviteMember is usually called by a controller which knows the user.
-        // But the signature is `inviteMember(Long bandId, String email)`.
-        // I might need to change the signature or just say "A member of..."
-        // Or fetch owner? But any member might trigger it?
-        // Let's check implementation. The method just checks if existinginvitation.
-
-        // Let's pass "The Band" for now or update signature later.
-        // Also I need `inviteLink`.
-        // emailService.sendBandInvitation(user.getEmail(), band.getName(), "The Band",
-        // "view-invitations");
-
     }
 
     public List<com.bandanize.backend.dtos.BandInvitationDTO> getPendingInvitations(Long userId) {
@@ -363,7 +334,7 @@ public class BandService {
                     }
                 }
             } catch (Exception e) {
-                // ignore or log
+                logger.warn("Failed to delete band photo: {}", e.getMessage());
             }
         }
 

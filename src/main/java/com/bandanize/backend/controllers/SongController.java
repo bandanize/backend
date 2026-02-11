@@ -2,6 +2,8 @@ package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.models.*;
 import com.bandanize.backend.services.SongService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,8 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/api")
 public class SongController {
+
+    private static final Logger logger = LoggerFactory.getLogger(SongController.class);
 
     @Autowired
     private SongService songService;
@@ -90,9 +94,8 @@ public class SongController {
     @PutMapping("/tabs/{tabId}")
     public ResponseEntity<TablatureModel> updateTablature(@PathVariable Long tabId,
             @RequestBody TablatureModel details) {
-        System.out.println("Received update for tabId: " + tabId);
-        System.out.println("Payload: name=" + details.getName() + ", inst=" + details.getInstrument() + ", icon="
-                + details.getInstrumentIcon() + ", tuning=" + details.getTuning());
+        logger.debug("Received update for tabId: {}, name={}, instrument={}", tabId, details.getName(),
+                details.getInstrument());
         return ResponseEntity.ok(songService.updateTablature(tabId, details));
     }
 

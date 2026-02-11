@@ -2,6 +2,8 @@ package com.bandanize.backend.filters;
 
 import com.bandanize.backend.services.JwtService;
 import com.bandanize.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     @Autowired
     private JwtService jwtService;
 
@@ -33,70 +37,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String username;
 
         try {
-            // Verifica si el encabezado contiene el token JWT
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 chain.doFilter(request, response);
                 return;
             }
 
-            jwt = authHeader.substring(7); // Extrae el token después de "Bearer "
+            jwt = authHeader.substring(7);
             try {
-                username = jwtService.extractUsername(jwt); // Extrae el username del token
+                username = jwtService.extractUsername(jwt);
             } catch (Exception e) {
-                System.out.println("JWT Extraction failed: " + e.getMessage());
+                logger.debug("JWT extraction failed: {}", e.getMessage());
                 chain.doFilter(request, response);
                 return;
             }
 
-            // Si el usuario no está autenticado, realiza la autenticación
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                System.out.println("Processing JWT for user: " + username);
+                logger.debug("Processing JWT for user: {}", username);
 
                 UserDetails userDetails = userRepository.findByUsername(username)
                         .orElse(null);
 
                 if (userDetails == null) {
-                    System.out.println("User not found in DB: " + username);
+                    logger.warn("User not found in DB: {}", username);
+                } else if (!userDetails.isEnabled()) {
+                    logger.debug("User is disabled, rejecting authentication: {}", username);
                 } else {
-                    // Self-Healing
-                    if (!userDetails.isEnabled()) {
-                        System.out.println("User is disabled. Attempting self-healing for: " + username);
-                        try {
-                            com.bandanize.backend.models.UserModel userModel = (com.bandanize.backend.models.UserModel) userDetails;
-                            userModel.setDisabled(false);
-                            userRepository.save(userModel);
-                            // Refresh userDetails
-                            userDetails = userRepository.findByUsername(username).orElse(null);
-                            if (userDetails == null) {
-                                // Should not happen, but safe fallback
-                                System.out.println("CRITICAL: User disappeared after save!");
-                            }
-                            System.out.println("SELF-HEALING SUCCESS: Re-enabled user " + username);
-                        } catch (Exception e) {
-                            System.out.println("SELF-HEALING FAILED: " + e.getMessage());
-                            e.printStackTrace();
-                        }
-                    }
-
                     try {
                         if (jwtService.validateToken(jwt, userDetails)) {
-                            System.out.println("Token Valid. Setting Auth for: " + username);
+                            logger.debug("Token valid. Setting auth for: {}", username);
                             var authToken = new UsernamePasswordAuthenticationToken(
                                     userDetails, null, userDetails.getAuthorities());
                             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                             SecurityContextHolder.getContext().setAuthentication(authToken);
                         } else {
-                            System.out.println("Token Validation Failed for: " + username);
+                            logger.debug("Token validation failed for: {}", username);
                         }
                     } catch (Exception e) {
-                        System.out.println("Token Validation Exception: " + e.getMessage());
+                        logger.warn("Token validation exception for {}: {}", username, e.getMessage());
                     }
                 }
             }
             chain.doFilter(request, response);
         } catch (Exception e) {
-            System.out.println("Filter Chain Exception: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Filter chain exception: {}", e.getMessage(), e);
             chain.doFilter(request, response);
         }
     }

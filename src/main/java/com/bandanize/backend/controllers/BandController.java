@@ -1,8 +1,6 @@
 package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.dtos.BandDTO;
-import com.bandanize.backend.exceptions.ErrorResponse;
-import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.BandModel;
 import com.bandanize.backend.services.BandService;
 import com.bandanize.backend.services.ChatService;
@@ -236,15 +234,4 @@ public class BandController {
         return ResponseEntity.ok("Chat marked as read");
     }
 
-    /**
-     * Exception handler for ResourceNotFoundException.
-     *
-     * @param ex The exception.
-     * @return ResponseEntity with error details.
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), "Resource not found");
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
 }

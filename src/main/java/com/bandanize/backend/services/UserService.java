@@ -7,7 +7,12 @@ import com.bandanize.backend.models.UserModel;
 import com.bandanize.backend.repositories.BandRepository;
 import com.bandanize.backend.repositories.BandInvitationRepository;
 import com.bandanize.backend.repositories.ChatMessageRepository;
+import com.bandanize.backend.repositories.ChatReadStatusRepository;
+import com.bandanize.backend.repositories.EventRepository;
+import com.bandanize.backend.repositories.NotificationRepository;
 import com.bandanize.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +26,15 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final BandRepository bandRepository;
     private final BandInvitationRepository bandInvitationRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatReadStatusRepository chatReadStatusRepository;
+    private final EventRepository eventRepository;
+    private final NotificationRepository notificationRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtService jwtService;
@@ -34,6 +44,9 @@ public class UserService {
             BandRepository bandRepository,
             BandInvitationRepository bandInvitationRepository,
             ChatMessageRepository chatMessageRepository,
+            ChatReadStatusRepository chatReadStatusRepository,
+            EventRepository eventRepository,
+            NotificationRepository notificationRepository,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
             EmailService emailService,
             JwtService jwtService) {
@@ -41,6 +54,9 @@ public class UserService {
         this.bandRepository = bandRepository;
         this.bandInvitationRepository = bandInvitationRepository;
         this.chatMessageRepository = chatMessageRepository;
+        this.chatReadStatusRepository = chatReadStatusRepository;
+        this.eventRepository = eventRepository;
+        this.notificationRepository = notificationRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.jwtService = jwtService;
@@ -147,7 +163,17 @@ public class UserService {
         }
         chatMessageRepository.saveAll(messages);
 
-        // 3. Handle Bands
+        // 3. Delete chat read statuses for this user
+        chatReadStatusRepository.deleteByUserId(user.getId());
+
+        // 4. Delete notifications where user is recipient or actor
+        notificationRepository.deleteByRecipient(user);
+        notificationRepository.deleteByActor(user);
+
+        // 5. Delete events created by this user
+        eventRepository.deleteByCreatorId(user.getId());
+
+        // 6. Handle Bands
         // We need to separate bands owned by the user vs bands the user is just a
         // member of.
         // Note: user.getBands() returns ALL bands the user is part of (owned + member).
@@ -165,7 +191,7 @@ public class UserService {
             }
         }
 
-        // 4. Delete the user
+        // 7. Delete the user
         userRepository.delete(user);
     }
 
@@ -233,21 +259,20 @@ public class UserService {
     @org.springframework.transaction.annotation.Transactional
     public void verifyUser(String token) {
         String username = jwtService.extractUsername(token); // Throws if invalid/expired
-        System.out.println("Verifying user: " + username);
+        logger.debug("Verifying user: {}", username);
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        System.out.println("User found. Current disabled status: " + user.isDisabled());
+        logger.debug("User found. Current disabled status: {}", user.isDisabled());
 
         if (!user.isDisabled()) {
-            // Already verified, we can just return silently or throw logic exception
-            System.out.println("User already verified.");
+            logger.debug("User already verified: {}", username);
             return;
         }
 
         user.setDisabled(false);
         userRepository.save(user);
-        System.out.println("User enabled and saved.");
+        logger.debug("User enabled and saved: {}", username);
     }
 
     public void sendVerificationEmail(UserModel user, String token) {

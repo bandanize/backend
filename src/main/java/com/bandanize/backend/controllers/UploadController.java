@@ -1,6 +1,8 @@
 package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.services.StorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/upload")
 public class UploadController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UploadController.class);
 
     private final StorageService storageService;
 
@@ -115,7 +119,7 @@ public class UploadController {
                     targetFolder);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error uploading chunk: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error uploading chunk: " + e.getMessage());
         }

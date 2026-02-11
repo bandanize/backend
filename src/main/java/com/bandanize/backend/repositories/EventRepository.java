@@ -14,4 +14,8 @@ public interface EventRepository extends JpaRepository<EventModel, Long> {
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Query("DELETE FROM EventModel e WHERE e.band.id = :bandId")
     void deleteByBandId(@org.springframework.data.repository.query.Param("bandId") Long bandId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByCreatorId(Long creatorId);
 }

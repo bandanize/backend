@@ -14,4 +14,8 @@ public interface ChatReadStatusRepository extends JpaRepository<ChatReadStatus, 
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Query("DELETE FROM ChatReadStatus c WHERE c.band.id = :bandId")
     void deleteByBandId(@org.springframework.data.repository.query.Param("bandId") Long bandId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByUserId(Long userId);
 }
