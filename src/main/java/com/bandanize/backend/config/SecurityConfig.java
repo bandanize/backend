@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/uploads/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/bands/*/calendar.ics").permitAll()
+                        .requestMatchers("/api/calendar/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
