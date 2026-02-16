@@ -62,6 +62,9 @@ public class BandModel {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<ChatReadStatus> chatReadStatuses = new ArrayList<>();
 
+    @Column(unique = true)
+    private String calendarToken;
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -181,5 +184,13 @@ public class BandModel {
 
     public void setChatReadStatuses(List<ChatReadStatus> chatReadStatuses) {
         this.chatReadStatuses = chatReadStatuses;
+    }
+
+    public String getCalendarToken() {
+        return calendarToken;
+    }
+
+    public void setCalendarToken(String calendarToken) {
+        this.calendarToken = calendarToken;
     }
 }

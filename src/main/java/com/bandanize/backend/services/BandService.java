@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +68,9 @@ public class BandService {
     // ... existing createBand ...
     @org.springframework.transaction.annotation.Transactional
     public BandDTO createBand(BandModel band) {
+        if (band.getCalendarToken() == null) {
+            band.setCalendarToken(UUID.randomUUID().toString());
+        }
         BandModel savedBand = bandRepository.save(band);
         return convertToDTO(savedBand);
     }
@@ -86,6 +90,7 @@ public class BandService {
         band.setRrss(bandDetails.getRrss());
         band.setOwner(user);
         band.getUsers().add(user);
+        band.setCalendarToken(UUID.randomUUID().toString());
 
         BandModel savedBand = bandRepository.save(band);
         user.getBands().add(savedBand);
@@ -384,5 +389,33 @@ public class BandService {
         bandDTO.setSongLists(band.getSongLists());
         bandDTO.setChatMessages(band.getChatMessages());
         return bandDTO;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public String getOrGenerateCalendarToken(Long bandId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        if (band.getCalendarToken() == null || band.getCalendarToken().isEmpty()) {
+            band.setCalendarToken(UUID.randomUUID().toString());
+            bandRepository.save(band);
+        }
+        return band.getCalendarToken();
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public String refreshCalendarToken(Long bandId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
+
+        band.setCalendarToken(UUID.randomUUID().toString());
+        bandRepository.save(band);
+        return band.getCalendarToken();
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public BandModel getBandByCalendarToken(String token) {
+        return bandRepository.findByCalendarToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found for the given calendar token"));
     }
 }
