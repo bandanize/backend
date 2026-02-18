@@ -30,7 +30,7 @@
 		<java.version>17</java.version>
 		<!-- Override versions to fix vulnerabilities -->
 		<tomcat.version>10.1.45</tomcat.version>
-		<postgresql.version>42.7.9</postgresql.version>
+		<postgresql.version>42.7.10</postgresql.version>
 	</properties>
 	<dependencies>
 		<dependency>
